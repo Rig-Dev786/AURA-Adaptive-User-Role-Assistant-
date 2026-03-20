@@ -1,4 +1,4 @@
-﻿import { signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuraLogo from "./AuraLogo";
@@ -27,7 +27,7 @@ export default function Navbar({ user }) {
       {/* Logo */}
       <div
         style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-        onClick={() => navigate("/dashboard")}>
+        onClick={() => navigate("/")}>
         <div className="aura-nav-logo">
           <AuraLogo size={40} spin={true} />
         </div>

@@ -82,7 +82,8 @@ export default function Login() {
         }}>
           {/* Logo + name */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40, cursor: "pointer" }}
+                 onClick={() => navigate("/")}>
               <div className="aura-logo-wrap">
                 <AuraLogo size={44} spin={true} />
               </div>
