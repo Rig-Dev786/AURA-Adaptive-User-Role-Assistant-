@@ -3,12 +3,12 @@
     <div style={{ fontFamily: "'Sora', sans-serif" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h3 style={{ color: "#fff", margin: 0, fontSize: 18, fontWeight: 700 }}>
+        <h3 style={{ color: "#0f172a", margin: 0, fontSize: 18, fontWeight: 700 }}>
           Your Learning Pathway
         </h3>
         <div style={{
-          background: "rgba(8,145,178,0.15)",
-          border: "1px solid rgba(8,145,178,0.3)",
+          background: "rgba(3,105,161,0.15)",
+          border: "1px solid rgba(3,105,161,0.3)",
           borderRadius: 20, padding: "6px 16px",
           color: "var(--accent)", fontSize: 13, fontWeight: 600,
         }}>
@@ -48,20 +48,20 @@
               onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--glass-border)"}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <h4 style={{ color: "#fff", margin: 0, fontSize: 15, fontWeight: 600 }}>
+                <h4 style={{ color: "#0f172a", margin: 0, fontSize: 15, fontWeight: 600 }}>
                   {step.title}
                 </h4>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 12 }}>
                   <span style={{
-                    background: "rgba(8,145,178,0.15)",
-                    border: "1px solid rgba(8,145,178,0.3)",
+                    background: "rgba(3,105,161,0.15)",
+                    border: "1px solid rgba(3,105,161,0.3)",
                     color: "var(--primary)", fontSize: 11,
                     padding: "2px 10px", borderRadius: 20, fontWeight: 600,
                   }}>⏱ {step.duration_hours}h</span>
                   {step.url && (
                     <a href={step.url} target="_blank" rel="noreferrer" style={{
-                      background: "rgba(6,182,212,0.15)",
-                      border: "1px solid rgba(6,182,212,0.3)",
+                      background: "rgba(2,132,199,0.15)",
+                      border: "1px solid rgba(2,132,199,0.3)",
                       color: "var(--accent)", fontSize: 11,
                       padding: "2px 10px", borderRadius: 20, fontWeight: 600,
                       textDecoration: "none",

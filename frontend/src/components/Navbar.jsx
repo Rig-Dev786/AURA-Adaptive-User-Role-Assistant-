@@ -42,12 +42,12 @@ export default function Navbar({ user }) {
         ].map(({ label, path }) => (
           <button key={path} onClick={() => navigate(path)} style={{
             background: location.pathname === path
-              ? "rgba(8,145,178,0.18)"
+              ? "rgba(3,105,161,0.18)"
               : "transparent",
             border: location.pathname === path
-              ? "1px solid rgba(8,145,178,0.4)"
+              ? "1px solid rgba(3,105,161,0.4)"
               : "1px solid transparent",
-            color: location.pathname === path ? "var(--accent)" : "var(--text-muted)",
+            color: location.pathname === path ? "var(--primary)" : "var(--text-muted)",
             padding: "6px 16px",
             borderRadius: "var(--radius-sm)",
             fontSize: 14, fontWeight: 500, cursor: "pointer",
@@ -62,10 +62,10 @@ export default function Navbar({ user }) {
         {user?.photoURL && (
           <img src={user.photoURL} alt="avatar" style={{
             width: 32, height: 32, borderRadius: "50%",
-            border: "2px solid rgba(8,145,178,0.5)",
+            border: "2px solid rgba(3,105,161,0.5)",
           }} />
         )}
-        <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
+        <span style={{ color: "rgba(15,23,42,0.5)", fontSize: 13 }}>
           {user?.displayName?.split(" ")[0]}
         </span>
         <button className="btn-secondary" onClick={handleLogout} style={{

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
@@ -62,11 +62,11 @@ export default function History() {
           borderRadius: "var(--radius-lg)", padding: 24,
           position: "sticky", top: 80,
         }}>
-          <h2 style={{ color: "#fff", margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>
+          <h2 style={{ color: "#0f172a", margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>
             📂 Past Analyses
           </h2>
           {loadingList ? (
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading...</p>
+            <p style={{ color: "rgba(15,23,42,0.3)", fontSize: 13 }}>Loading...</p>
           ) : (
             <HistoryList analyses={analyses} onSelect={loadDetail} />
           )}
@@ -77,7 +77,7 @@ export default function History() {
           {!selected ? (
             <div style={{
               textAlign: "center", padding: "80px 24px",
-              color: "rgba(255,255,255,0.25)", fontSize: 14,
+              color: "rgba(15,23,42,0.25)", fontSize: 14,
             }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>👈</div>
               Select an analysis from the list to view details.

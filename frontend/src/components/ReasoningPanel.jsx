@@ -5,8 +5,8 @@ export default function ReasoningPanel({ reasoning }) {
 
   return (
     <div className="glass-panel" style={{
-      background: "rgba(8,145,178,0.05)",
-      borderColor: "rgba(8,145,178,0.2)",
+      background: "rgba(3,105,161,0.05)",
+      borderColor: "rgba(3,105,161,0.2)",
       borderRadius: "var(--radius-md)",
       overflow: "hidden",
     }}>
@@ -27,7 +27,7 @@ export default function ReasoningPanel({ reasoning }) {
           </span>
         </div>
         <span style={{
-          color: "rgba(255,255,255,0.4)", fontSize: 18,
+          color: "rgba(15,23,42,0.4)", fontSize: 18,
           transform: open ? "rotate(180deg)" : "rotate(0deg)",
           transition: "transform 0.3s",
           display: "inline-block",
@@ -40,7 +40,7 @@ export default function ReasoningPanel({ reasoning }) {
           <p style={{
             color: "var(--text-muted)",
             fontSize: 14, lineHeight: 1.8, margin: 0,
-            borderLeft: "3px solid rgba(8,145,178,0.5)",
+            borderLeft: "3px solid rgba(3,105,161,0.5)",
             paddingLeft: 16,
           }}>
             {reasoning}

@@ -57,7 +57,7 @@ export default function UploadPanel({ onResult, onLoading }) {
       {/* Resume Upload */}
       <div>
         <label style={{
-          color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600,
+          color: "rgba(15,23,42,0.6)", fontSize: 12, fontWeight: 600,
           letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 10
         }}>
           Resume (PDF or DOCX)
@@ -74,7 +74,7 @@ export default function UploadPanel({ onResult, onLoading }) {
             padding: "40px 24px",
             textAlign: "center",
             cursor: "pointer",
-            background: dragging ? "rgba(8,145,178,0.07)" : file ? "rgba(6,182,212,0.07)" : "var(--glass-bg)",
+            background: dragging ? "rgba(3,105,161,0.07)" : file ? "rgba(2,132,199,0.07)" : "var(--glass-bg)",
             minHeight: 160,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 12,
@@ -88,14 +88,14 @@ export default function UploadPanel({ onResult, onLoading }) {
           {file ? (
             <>
               <p style={{ color: "#67e8f9", fontWeight: 600, margin: 0 }}>{file.name}</p>
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: 0 }}>Click to change</p>
+              <p style={{ color: "rgba(15,23,42,0.3)", fontSize: 12, margin: 0 }}>Click to change</p>
             </>
           ) : (
             <>
-              <p style={{ color: "rgba(255,255,255,0.5)", margin: 0, fontSize: 14 }}>
+              <p style={{ color: "rgba(15,23,42,0.5)", margin: 0, fontSize: 14 }}>
                 Drop your resume here
               </p>
-              <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, margin: 0 }}>
+              <p style={{ color: "rgba(15,23,42,0.25)", fontSize: 12, margin: 0 }}>
                 PDF or DOCX supported
               </p>
             </>
@@ -109,7 +109,7 @@ export default function UploadPanel({ onResult, onLoading }) {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <label style={{
-            color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600,
+            color: "rgba(15,23,42,0.6)", fontSize: 12, fontWeight: 600,
             letterSpacing: "0.08em", textTransform: "uppercase"
           }}>
             Job Description

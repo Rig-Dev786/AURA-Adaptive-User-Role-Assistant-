@@ -1,12 +1,12 @@
 ﻿import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from "recharts";
 
-const SEVERITY_COLOR = (s) => s > 0.8 ? "#ef4444" : s > 0.5 ? "#f59e0b" : "#10b981";
+const SEVERITY_COLOR = (s) => s > 0.8 ? "#ef4444" : s > 0.5 ? "#f59e0b" : "#0284c7";
 const SEVERITY_LABEL = (s) => s > 0.8 ? "Critical" : s > 0.5 ? "Moderate" : "Minor";
 
 export default function GapDisplay({ result }) {
   const { user_skills = [], jd_skills = [], gaps = [], match_score = 0 } = result;
   const strong = jd_skills.filter(s => !gaps.find(g => g.skill === s));
-  const scoreColor = match_score > 60 ? "#10b981" : match_score > 30 ? "#f59e0b" : "#ef4444";
+  const scoreColor = match_score > 60 ? "#0284c7" : match_score > 30 ? "#f59e0b" : "#ef4444";
 
   return (
     <div>
@@ -22,7 +22,7 @@ export default function GapDisplay({ result }) {
               data={[{ value: match_score, fill: scoreColor }]}
               startAngle={90} endAngle={-270}>
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={8} background={{ fill: "rgba(8,145,178,0.08)" }} />
+              <RadialBar dataKey="value" cornerRadius={8} background={{ fill: "rgba(3,105,161,0.08)" }} />
             </RadialBarChart>
           </ResponsiveContainer>
           <div style={{ textAlign: "center", marginTop: -80, position: "relative" }}>
@@ -42,8 +42,8 @@ export default function GapDisplay({ result }) {
           </p>
           <div style={{ display: "flex", gap: 16 }}>
             {[
-              { label: "Skills You Have", value: user_skills.length, color: "#10b981" },
-              { label: "Role Requires",   value: jd_skills.length,  color: "#0891b2" },
+              { label: "Skills You Have", value: user_skills.length, color: "#0284c7" },
+              { label: "Role Requires",   value: jd_skills.length,  color: "#0369a1" },
               { label: "Gaps Found",      value: gaps.length,        color: "#ef4444" },
             ].map(({ label, value, color }) => (
               <div key={label} style={{
@@ -61,13 +61,13 @@ export default function GapDisplay({ result }) {
 
       {/* Three Column View */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-        <SkillBox title="✅ You Have"   color="#10b981" skills={user_skills.map(s => ({ name: s }))} />
-        <SkillBox title="🎯 Role Needs" color="#0891b2" skills={jd_skills.map(s => ({ name: s }))} />
+        <SkillBox title="✅ You Have"   color="#0284c7" skills={user_skills.map(s => ({ name: s }))} />
+        <SkillBox title="🎯 Role Needs" color="#0369a1" skills={jd_skills.map(s => ({ name: s }))} />
 
         {/* Gaps */}
         <div style={{
-          background: "rgba(8,145,178,0.06)",
-          border: "1px solid rgba(8,145,178,0.22)",
+          background: "rgba(3,105,161,0.06)",
+          border: "1px solid rgba(3,105,161,0.22)",
           borderRadius: "var(--radius-md)", padding: 20,
         }}>
           <h4 style={{

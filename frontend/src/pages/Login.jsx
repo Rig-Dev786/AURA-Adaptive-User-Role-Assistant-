@@ -43,13 +43,13 @@ export default function Login() {
       <div className="animate-float" style={{
         position: "absolute", top: "10%", left: "5%",
         width: 500, height: 500, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(8,145,178,0.12) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(3,105,161,0.12) 0%, transparent 70%)",
         filter: "blur(60px)", pointerEvents: "none",
       }} />
       <div className="animate-float" style={{
         position: "absolute", bottom: "5%", right: "5%",
         width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(6,182,212,0.10) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(2,132,199,0.10) 0%, transparent 70%)",
         filter: "blur(60px)", pointerEvents: "none",
         animationDelay: "3s", animationDirection: "reverse",
       }} />
@@ -57,7 +57,7 @@ export default function Login() {
       {/* ── Dot grid ── */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.04,
-        backgroundImage: "radial-gradient(circle, rgba(6,182,212,1) 1px, transparent 1px)",
+        backgroundImage: "radial-gradient(circle, rgba(2,132,199,1) 1px, transparent 1px)",
         backgroundSize: "36px 36px",
       }} />
 
@@ -69,15 +69,15 @@ export default function Login() {
         gridTemplateColumns: "1fr 1fr",
         borderRadius: "var(--radius-lg)",
         overflow: "hidden",
-        border: "1px solid rgba(6,182,212,0.2)",
-        boxShadow: "0 0 80px rgba(8,145,178,0.12), 0 40px 80px rgba(0,0,0,0.55)",
+        border: "1px solid rgba(3,105,161,0.2)",
+        boxShadow: "0 0 60px rgba(3,105,161,0.1), 0 20px 60px rgba(0,0,0,0.08)",
       }}>
 
         {/* ════ LEFT — Branding panel ════ */}
         <div style={{
           padding: "52px 44px",
-          background: "linear-gradient(145deg, rgba(8,145,178,0.14) 0%, rgba(6,182,212,0.05) 100%)",
-          borderRight: "1px solid rgba(6,182,212,0.14)",
+          background: "linear-gradient(145deg, rgba(3,105,161,0.14) 0%, rgba(2,132,199,0.05) 100%)",
+          borderRight: "1px solid rgba(2,132,199,0.14)",
           display: "flex", flexDirection: "column", justifyContent: "space-between",
         }}>
           {/* Logo + name */}
@@ -96,7 +96,7 @@ export default function Login() {
             }}>
               Bridge the gap between{" "}
               <span style={{
-                background: "linear-gradient(135deg, #67e8f9, #0891b2)",
+                background: "linear-gradient(135deg, #0369a1, #0284c7)",
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -120,8 +120,8 @@ export default function Login() {
                 <div key={text} style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "10px 14px", borderRadius: "var(--radius-sm)",
-                  background: "rgba(6,182,212,0.07)",
-                  border: "1px solid rgba(6,182,212,0.18)",
+                  background: "rgba(2,132,199,0.07)",
+                  border: "1px solid rgba(2,132,199,0.18)",
                 }}>
                   <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
                   <span style={{ color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}>{text}</span>
@@ -130,7 +130,7 @@ export default function Login() {
             </div>
           </div>
 
-          <p style={{ color: "rgba(6,182,212,0.4)", fontSize: 12, marginTop: 32 }}>
+          <p style={{ color: "rgba(2,132,199,0.4)", fontSize: 12, marginTop: 32 }}>
             Powered by cutting-edge NLP &amp; LLM reasoning
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function Login() {
         {/* ════ RIGHT — Login form ════ */}
         <div style={{
           padding: "52px 44px",
-          background: "rgba(5,13,20,0.95)",
+          background: "rgba(248,250,252,0.92)",
           display: "flex", flexDirection: "column", justifyContent: "center",
         }}>
           <h3 style={{ color: "var(--text-main)", fontSize: 26, fontWeight: 800, margin: "0 0 6px" }}>
@@ -167,7 +167,7 @@ export default function Login() {
               <>
                 <div style={{
                   width: 20, height: 20, borderRadius: "50%",
-                  border: "2px solid rgba(255,255,255,0.3)",
+                  border: "2px solid rgba(15,23,42,0.3)",
                   borderTopColor: "#fff",
                   animation: "login-spin 0.8s linear infinite",
                 }} />
@@ -197,12 +197,12 @@ export default function Login() {
 
           {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, fontFamily: "monospace" }}>OR</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ flex: 1, height: 1, background: "rgba(15,23,42,0.07)" }} />
+            <span style={{ color: "rgba(15,23,42,0.2)", fontSize: 11, fontFamily: "monospace" }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(15,23,42,0.07)" }} />
           </div>
 
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, textAlign: "center", margin: 0 }}>
+          <p style={{ color: "rgba(15,23,42,0.2)", fontSize: 12, textAlign: "center", margin: 0 }}>
             By signing in, you agree to our Terms &amp; Privacy Policy.
           </p>
 
@@ -211,11 +211,11 @@ export default function Login() {
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "5px 14px", borderRadius: 99,
-              background: "rgba(16,185,129,0.1)",
-              border: "1px solid rgba(16,185,129,0.25)",
-              color: "rgba(16,185,129,0.8)", fontSize: 11, fontFamily: "monospace",
+              background: "rgba(2,132,199,0.1)",
+              border: "1px solid rgba(2,132,199,0.25)",
+              color: "rgba(2,132,199,0.8)", fontSize: 11, fontFamily: "monospace",
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0284c7", display: "inline-block" }} />
               AURA v1.0 — Hackathon Edition
             </span>
           </div>
