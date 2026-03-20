@@ -1,0 +1,18 @@
+# Firebase — NEVER commit this
+firebase-service-account.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

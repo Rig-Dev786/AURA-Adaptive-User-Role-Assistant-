@@ -1,0 +1,11 @@
+flask
+flask-cors
+PyMuPDF
+python-docx
+spacy
+sentence-transformers
+scikit-learn
+rapidfuzz
+firebase-admin
+reportlab
+python-dotenv
