@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 
 export default function HistoryList({ analyses = [] }) {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function HistoryList({ analyses = [] }) {
     <div style={{ fontFamily: "'Sora', sans-serif", display: "flex", flexDirection: "column", gap: 12 }}>
       {analyses.map((a) => {
         const score = a.match_score || 0;
-        const color = score > 60 ? "#22c55e" : score > 30 ? "#f97316" : "#ef4444";
+        const color = score > 60 ? "#10b981" : score > 30 ? "#f59e0b" : "#0891b2";
         return (
           <div key={a.analysis_id}
             onClick={() => navigate(`/history/${a.analysis_id}`)}

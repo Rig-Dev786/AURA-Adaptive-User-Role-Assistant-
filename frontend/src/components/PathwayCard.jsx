@@ -1,4 +1,4 @@
-export default function PathwayCard({ pathway = [], totalHours = 0 }) {
+﻿export default function PathwayCard({ pathway = [], totalHours = 0 }) {
   return (
     <div style={{ fontFamily: "'Sora', sans-serif" }}>
       {/* Header */}
@@ -7,10 +7,10 @@ export default function PathwayCard({ pathway = [], totalHours = 0 }) {
           Your Learning Pathway
         </h3>
         <div style={{
-          background: "rgba(99,102,241,0.15)",
-          border: "1px solid rgba(99,102,241,0.3)",
+          background: "rgba(8,145,178,0.15)",
+          border: "1px solid rgba(8,145,178,0.3)",
           borderRadius: 20, padding: "6px 16px",
-          color: "#a5b4fc", fontSize: 13, fontWeight: 600,
+          color: "var(--accent)", fontSize: 13, fontWeight: 600,
         }}>
           ⏱ {totalHours}h total
         </div>
@@ -22,7 +22,7 @@ export default function PathwayCard({ pathway = [], totalHours = 0 }) {
         <div style={{
           position: "absolute", left: 20, top: 0, bottom: 0,
           width: 2,
-          background: "linear-gradient(to bottom, #6366f1, #a855f7, transparent)",
+          background: "linear-gradient(to bottom, var(--primary), var(--accent), transparent)",
         }} />
 
         {pathway.map((step, i) => (
@@ -33,10 +33,10 @@ export default function PathwayCard({ pathway = [], totalHours = 0 }) {
             {/* Step number bubble */}
             <div style={{
               width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-              background: "linear-gradient(135deg, #6366f1, #a855f7)",
+              background: "linear-gradient(135deg, var(--primary), var(--accent))",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 14, fontWeight: 800, color: "#fff",
-              boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+              fontSize: 14, fontWeight: 800, color: "#1a160e",
+              boxShadow: "0 4px 16px var(--primary-glow)",
               position: "relative", zIndex: 1,
             }}>{step.order}</div>
 
@@ -53,16 +53,16 @@ export default function PathwayCard({ pathway = [], totalHours = 0 }) {
                 </h4>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 12 }}>
                   <span style={{
-                    background: "rgba(99,102,241,0.15)",
-                    border: "1px solid rgba(99,102,241,0.3)",
-                    color: "#a5b4fc", fontSize: 11,
+                    background: "rgba(8,145,178,0.15)",
+                    border: "1px solid rgba(8,145,178,0.3)",
+                    color: "var(--primary)", fontSize: 11,
                     padding: "2px 10px", borderRadius: 20, fontWeight: 600,
                   }}>⏱ {step.duration_hours}h</span>
                   {step.url && (
                     <a href={step.url} target="_blank" rel="noreferrer" style={{
-                      background: "rgba(168,85,247,0.15)",
-                      border: "1px solid rgba(168,85,247,0.3)",
-                      color: "#d8b4fe", fontSize: 11,
+                      background: "rgba(6,182,212,0.15)",
+                      border: "1px solid rgba(6,182,212,0.3)",
+                      color: "var(--accent)", fontSize: 11,
                       padding: "2px 10px", borderRadius: 20, fontWeight: 600,
                       textDecoration: "none",
                     }}>↗ Link</a>

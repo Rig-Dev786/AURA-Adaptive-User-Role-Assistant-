@@ -1,12 +1,12 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 
 export default function ReasoningPanel({ reasoning }) {
   const [open, setOpen] = useState(true);
 
   return (
     <div className="glass-panel" style={{
-      background: "rgba(168,85,247,0.05)",
-      borderColor: "rgba(168,85,247,0.2)",
+      background: "rgba(8,145,178,0.05)",
+      borderColor: "rgba(8,145,178,0.2)",
       borderRadius: "var(--radius-md)",
       overflow: "hidden",
     }}>
@@ -20,7 +20,7 @@ export default function ReasoningPanel({ reasoning }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 16 }}>🧠</span>
           <span style={{
-            color: "#d8b4fe", fontSize: 13, fontWeight: 700,
+            color: "var(--primary)", fontSize: 13, fontWeight: 700,
             letterSpacing: "0.06em", textTransform: "uppercase"
           }}>
             Reasoning Trace
@@ -38,9 +38,9 @@ export default function ReasoningPanel({ reasoning }) {
       {open && (
         <div style={{ padding: "0 20px 20px" }}>
           <p style={{
-            color: "rgba(255,255,255,0.65)",
+            color: "var(--text-muted)",
             fontSize: 14, lineHeight: 1.8, margin: 0,
-            borderLeft: "3px solid rgba(168,85,247,0.4)",
+            borderLeft: "3px solid rgba(8,145,178,0.5)",
             paddingLeft: 16,
           }}>
             {reasoning}

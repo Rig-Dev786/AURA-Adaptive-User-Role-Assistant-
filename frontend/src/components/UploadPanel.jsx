@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import axios from "axios";
 import { auth } from "../firebase";
 
@@ -74,7 +74,7 @@ export default function UploadPanel({ onResult, onLoading }) {
             padding: "40px 24px",
             textAlign: "center",
             cursor: "pointer",
-            background: dragging ? "rgba(99,102,241,0.08)" : file ? "rgba(168,85,247,0.08)" : "var(--glass-bg)",
+            background: dragging ? "rgba(8,145,178,0.07)" : file ? "rgba(6,182,212,0.07)" : "var(--glass-bg)",
             minHeight: 160,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 12,
@@ -87,7 +87,7 @@ export default function UploadPanel({ onResult, onLoading }) {
           }}>{file ? "📄" : "⬆️"}</div>
           {file ? (
             <>
-              <p style={{ color: "#a5b4fc", fontWeight: 600, margin: 0 }}>{file.name}</p>
+              <p style={{ color: "#67e8f9", fontWeight: 600, margin: 0 }}>{file.name}</p>
               <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, margin: 0 }}>Click to change</p>
             </>
           ) : (

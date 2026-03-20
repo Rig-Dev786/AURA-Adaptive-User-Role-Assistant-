@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   const handleExportPDF = async () => {
     if (!resultRef.current) return;
-    const canvas = await html2canvas(resultRef.current, { backgroundColor: "#0f0c29", scale: 1.5 });
+    const canvas = await html2canvas(resultRef.current, { backgroundColor: "#050d14", scale: 1.5 });
     const img = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 1.5, canvas.height / 1.5] });
     pdf.addImage(img, "PNG", 0, 0, canvas.width / 1.5, canvas.height / 1.5);
@@ -76,12 +76,12 @@ export default function Dashboard() {
           <div style={{ textAlign: "center", padding: "60px 0" }}>
             <div style={{
               width: 48, height: 48, borderRadius: "50%",
-              border: "3px solid rgba(99,102,241,0.2)",
-              borderTopColor: "#6366f1",
+              border: "3px solid rgba(8,145,178,0.2)",
+              borderTopColor: "var(--primary)",
               animation: "spin 0.8s linear infinite",
               margin: "0 auto 20px",
             }} />
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
               Analyzing your profile...
             </p>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -97,9 +97,11 @@ export default function Dashboard() {
                 padding: "8px 20px", borderRadius: "var(--radius-sm)", fontSize: 13
               }}>⬇ Export PDF</button>
               <button className="btn-primary" onClick={handleSave} disabled={saving || saved} style={{
-                background: saved ? "var(--success)" : undefined,
+                background: saved ? "rgba(126,168,126,0.2)" : undefined,
+                border: saved ? "1px solid rgba(126,168,126,0.4)" : "none",
+                color: saved ? "#10b981" : undefined,
                 padding: "8px 20px", borderRadius: "var(--radius-sm)", fontSize: 13,
-                opacity: (saving || saved) ? 0.7 : 1, cursor: (saving || saved) ? "default" : "pointer"
+                opacity: (saving || saved) ? 0.8 : 1, cursor: (saving || saved) ? "default" : "pointer"
               }}>
                 {saved ? "✓ Saved" : saving ? "Saving..." : "💾 Save Analysis"}
               </button>

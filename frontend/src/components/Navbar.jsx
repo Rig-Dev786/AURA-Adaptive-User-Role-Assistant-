@@ -1,4 +1,4 @@
-import { signOut } from "firebase/auth";
+﻿import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuraLogo from "./AuraLogo";
@@ -29,7 +29,7 @@ export default function Navbar({ user }) {
         style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
         onClick={() => navigate("/dashboard")}>
         <div className="aura-nav-logo">
-          <AuraLogo size={34} spin={true} />
+          <AuraLogo size={40} spin={true} />
         </div>
         <span className="aura-heading-sm">AURA</span>
       </div>
@@ -42,18 +42,16 @@ export default function Navbar({ user }) {
         ].map(({ label, path }) => (
           <button key={path} onClick={() => navigate(path)} style={{
             background: location.pathname === path
-              ? "rgba(99,102,241,0.2)"
+              ? "rgba(8,145,178,0.18)"
               : "transparent",
             border: location.pathname === path
-              ? "1px solid rgba(99,102,241,0.4)"
+              ? "1px solid rgba(8,145,178,0.4)"
               : "1px solid transparent",
-            color: location.pathname === path ? "#a5b4fc" : "rgba(255,255,255,0.5)",
+            color: location.pathname === path ? "var(--accent)" : "var(--text-muted)",
             padding: "6px 16px",
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "all 0.2s",
+            borderRadius: "var(--radius-sm)",
+            fontSize: 14, fontWeight: 500, cursor: "pointer",
+            transition: "all 0.25s ease",
             fontFamily: "'Sora', sans-serif",
           }}>{label}</button>
         ))}
@@ -64,7 +62,7 @@ export default function Navbar({ user }) {
         {user?.photoURL && (
           <img src={user.photoURL} alt="avatar" style={{
             width: 32, height: 32, borderRadius: "50%",
-            border: "2px solid rgba(99,102,241,0.5)",
+            border: "2px solid rgba(8,145,178,0.5)",
           }} />
         )}
         <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
