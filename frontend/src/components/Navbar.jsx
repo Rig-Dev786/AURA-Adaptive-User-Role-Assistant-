@@ -1,6 +1,7 @@
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
+import AuraLogo from "./AuraLogo";
 
 export default function Navbar({ user }) {
   const navigate = useNavigate();
@@ -24,17 +25,13 @@ export default function Navbar({ user }) {
       zIndex: 100,
     }}>
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+      <div
+        style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
         onClick={() => navigate("/dashboard")}>
-        <div style={{
-          width: 32, height: 32, borderRadius: "var(--radius-sm)",
-          background: "linear-gradient(135deg, var(--primary), var(--accent))",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 14, fontWeight: 800, color: "#fff",
-        }}>A</div>
-        <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px" }}>
-          AURA
-        </span>
+        <div className="aura-nav-logo">
+          <AuraLogo size={34} spin={true} />
+        </div>
+        <span className="aura-heading-sm">AURA</span>
       </div>
 
       {/* Nav links */}

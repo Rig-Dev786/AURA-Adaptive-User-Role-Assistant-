@@ -1,6 +1,7 @@
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import AuraLogo from "../components/AuraLogo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,19 +48,33 @@ export default function Login() {
         zIndex: 1,
       }}>
         {/* Logo mark */}
-        <div style={{
-          width: 64, height: 64, borderRadius: "var(--radius-md)",
-          background: "linear-gradient(135deg, var(--primary), var(--accent))",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 24px",
-          fontSize: 28, fontWeight: 800, color: "#fff",
-          boxShadow: "0 8px 24px var(--primary-glow)",
-        }}>A</div>
+        <div className="aura-logo-wrap" style={{ margin: "0 auto 28px" }}>
+          <AuraLogo size={80} spin={true} />
+        </div>
 
-        <h1 style={{ color: "var(--text-main)", fontSize: 32, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.5px" }}>
-          AURA
-        </h1>
-        <p className="gradient-text" style={{ fontSize: 14, margin: "0 0 40px", letterSpacing: "0.1em", fontWeight: 700 }}>
+        {/* AURA heading with shimmer + glow */}
+        <div style={{ marginBottom: 8, position: "relative", display: "inline-block" }}>
+          <h1 className="aura-heading" style={{ margin: 0 }}>AURA</h1>
+          {/* Glow blur layer behind the text */}
+          <h1 aria-hidden="true" style={{
+            position: "absolute", inset: 0,
+            margin: 0,
+            fontSize: 42,
+            fontWeight: 800,
+            letterSpacing: "0.18em",
+            color: "transparent",
+            filter: "blur(14px)",
+            background: "linear-gradient(135deg, #6366f1, #a855f7)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            opacity: 0.7,
+            pointerEvents: "none",
+            userSelect: "none",
+          }}>AURA</h1>
+        </div>
+
+        <p className="gradient-text" style={{ fontSize: 11, margin: "0 0 40px", letterSpacing: "0.22em", fontWeight: 700 }}>
           AI-ADAPTIVE ONBOARDING ENGINE
         </p>
 
