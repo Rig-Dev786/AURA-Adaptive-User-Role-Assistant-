@@ -4,12 +4,11 @@ export default function ReasoningPanel({ reasoning }) {
   const [open, setOpen] = useState(true);
 
   return (
-    <div style={{
+    <div className="glass-panel" style={{
       background: "rgba(168,85,247,0.05)",
-      border: "1px solid rgba(168,85,247,0.2)",
-      borderRadius: 16,
+      borderColor: "rgba(168,85,247,0.2)",
+      borderRadius: "var(--radius-md)",
       overflow: "hidden",
-      fontFamily: "'Sora', sans-serif",
     }}>
       {/* Accordion header */}
       <button onClick={() => setOpen(!open)} style={{

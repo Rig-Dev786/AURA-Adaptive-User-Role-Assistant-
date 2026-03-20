@@ -49,12 +49,7 @@ export default function History() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-      fontFamily: "'Sora', sans-serif",
-    }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');`}</style>
+    <div className="history-container">
       <Navbar user={user} />
 
       <main style={{
@@ -63,10 +58,8 @@ export default function History() {
       }}>
 
         {/* Left — list */}
-        <section style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 24, padding: 24,
+        <section className="glass-panel" style={{
+          borderRadius: "var(--radius-lg)", padding: 24,
           position: "sticky", top: 80,
         }}>
           <h2 style={{ color: "#fff", margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>
@@ -91,20 +84,17 @@ export default function History() {
             </div>
           ) : (
             <>
-              <section style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 24, padding: 32, marginBottom: 24,
+              <section className="glass-panel animate-fade-up" style={{
+                borderRadius: "var(--radius-lg)", padding: 32, marginBottom: 24,
               }}>
                 <GapDisplay result={selected} />
               </section>
               <section style={{ marginBottom: 24 }}>
                 <ReasoningPanel reasoning={selected.reasoning} />
               </section>
-              <section style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 24, padding: 32,
+              <section className="glass-panel animate-fade-up" style={{
+                borderRadius: "var(--radius-lg)", padding: 32,
+                animationDelay: "0.2s"
               }}>
                 <PathwayCard pathway={selected.pathway} totalHours={selected.total_hours} />
               </section>

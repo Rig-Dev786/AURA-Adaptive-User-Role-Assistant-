@@ -24,20 +24,10 @@ export default function HistoryList({ analyses = [] }) {
         return (
           <div key={a.analysis_id}
             onClick={() => navigate(`/history/${a.analysis_id}`)}
+            className="glass-panel hover-scale"
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16, padding: "16px 20px",
-              cursor: "pointer", transition: "all 0.2s",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(99,102,241,0.4)";
-              e.currentTarget.style.background = "rgba(99,102,241,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+              borderRadius: "var(--radius-md)", padding: "16px 20px", display: "flex", 
+              alignItems: "center", justifyContent: "space-between", cursor: "pointer",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

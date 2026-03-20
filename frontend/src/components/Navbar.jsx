@@ -12,10 +12,8 @@ export default function Navbar({ user }) {
   };
 
   return (
-    <nav style={{
-      background: "rgba(15,12,41,0.9)",
-      backdropFilter: "blur(16px)",
-      borderBottom: "1px solid rgba(255,255,255,0.08)",
+    <nav className="glass-panel" style={{
+      borderBottom: "1px solid var(--glass-border)",
       padding: "0 32px",
       height: 64,
       display: "flex",
@@ -24,14 +22,13 @@ export default function Navbar({ user }) {
       position: "sticky",
       top: 0,
       zIndex: 100,
-      fontFamily: "'Sora', sans-serif",
     }}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
         onClick={() => navigate("/dashboard")}>
         <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: "linear-gradient(135deg, #6366f1, #a855f7)",
+          width: 32, height: 32, borderRadius: "var(--radius-sm)",
+          background: "linear-gradient(135deg, var(--primary), var(--accent))",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 14, fontWeight: 800, color: "#fff",
         }}>A</div>
@@ -76,16 +73,10 @@ export default function Navbar({ user }) {
         <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
           {user?.displayName?.split(" ")[0]}
         </span>
-        <button onClick={handleLogout} style={{
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          color: "rgba(255,255,255,0.4)",
+        <button className="btn-secondary" onClick={handleLogout} style={{
           padding: "6px 14px",
-          borderRadius: 8,
+          borderRadius: "var(--radius-sm)",
           fontSize: 13,
-          cursor: "pointer",
-          fontFamily: "'Sora', sans-serif",
-          transition: "all 0.2s",
         }}>Logout</button>
       </div>
     </nav>

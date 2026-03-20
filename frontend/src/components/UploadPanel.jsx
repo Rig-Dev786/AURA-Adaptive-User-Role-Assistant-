@@ -67,19 +67,24 @@ export default function UploadPanel({ onResult, onLoading }) {
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
+          className={`glass-panel ${dragging ? "animate-pulse-glow" : "hover-scale"}`}
           style={{
-            border: `2px dashed ${dragging ? "#6366f1" : file ? "#a855f7" : "rgba(255,255,255,0.15)"}`,
-            borderRadius: 16,
+            border: `2px dashed ${dragging ? "var(--primary)" : file ? "var(--accent)" : "var(--glass-border)"}`,
+            borderRadius: "var(--radius-md)",
             padding: "40px 24px",
             textAlign: "center",
             cursor: "pointer",
-            background: dragging ? "rgba(99,102,241,0.05)" : file ? "rgba(168,85,247,0.05)" : "rgba(255,255,255,0.02)",
-            transition: "all 0.2s",
+            background: dragging ? "rgba(99,102,241,0.08)" : file ? "rgba(168,85,247,0.08)" : "var(--glass-bg)",
             minHeight: 160,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 12,
+            boxShadow: dragging ? "0 0 40px var(--primary-glow)" : "none",
           }}>
-          <div style={{ fontSize: 36 }}>{file ? "📄" : "⬆️"}</div>
+          <div style={{ 
+            fontSize: 36, 
+            transform: dragging ? "scale(1.2) translateY(-10px)" : file ? "scale(1)" : "scale(1)", 
+            transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
+          }}>{file ? "📄" : "⬆️"}</div>
           {file ? (
             <>
               <p style={{ color: "#a5b4fc", fontWeight: 600, margin: 0 }}>{file.name}</p>
@@ -111,11 +116,9 @@ export default function UploadPanel({ onResult, onLoading }) {
           </label>
           <div style={{ display: "flex", gap: 6 }}>
             {Object.entries(DEMO_PROFILES).map(([key, p]) => (
-              <button key={key} onClick={() => loadDemo(key)} style={{
-                background: "rgba(99,102,241,0.15)",
-                border: "1px solid rgba(99,102,241,0.3)",
-                color: "#a5b4fc", fontSize: 11, padding: "3px 10px",
-                borderRadius: 6, cursor: "pointer", fontFamily: "'Sora', sans-serif",
+              <button className="btn-secondary" key={key} onClick={() => loadDemo(key)} style={{
+                color: "var(--text-main)", fontSize: 11, padding: "3px 10px",
+                borderRadius: "var(--radius-sm)",
               }}>{p.label}</button>
             ))}
           </div>
@@ -124,35 +127,25 @@ export default function UploadPanel({ onResult, onLoading }) {
           value={jdText}
           onChange={(e) => setJdText(e.target.value)}
           placeholder="Paste the job description here, or click a demo profile above..."
+          className="glass-panel"
           style={{
             width: "100%", height: 180, padding: 16,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 16, color: "#fff", fontSize: 13,
+            borderRadius: "var(--radius-md)", color: "var(--text-main)", fontSize: 13,
             lineHeight: 1.6, resize: "none", outline: "none",
-            fontFamily: "'Sora', sans-serif",
             boxSizing: "border-box",
-            transition: "border-color 0.2s",
           }}
-          onFocus={(e) => e.target.style.borderColor = "rgba(99,102,241,0.5)"}
-          onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+          onFocus={(e) => e.target.style.borderColor = "var(--primary-glow)"}
+          onBlur={(e) => e.target.style.borderColor = "var(--glass-border)"}
         />
       </div>
 
       {/* Submit */}
       <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center" }}>
-        <button onClick={handleSubmit} disabled={!file || !jdText.trim()} style={{
-          background: (!file || !jdText.trim())
-            ? "rgba(99,102,241,0.3)"
-            : "linear-gradient(135deg, #6366f1, #a855f7)",
-          border: "none",
-          color: (!file || !jdText.trim()) ? "rgba(255,255,255,0.3)" : "#fff",
-          padding: "14px 48px",
-          borderRadius: 12, fontSize: 15, fontWeight: 600,
+        <button className="btn-primary" onClick={handleSubmit} disabled={!file || !jdText.trim()} style={{
+          padding: "16px 48px",
+          borderRadius: "var(--radius-md)", fontSize: 16,
+          opacity: (!file || !jdText.trim()) ? 0.3 : 1,
           cursor: (!file || !jdText.trim()) ? "not-allowed" : "pointer",
-          fontFamily: "'Sora', sans-serif",
-          transition: "all 0.3s",
-          boxShadow: (!file || !jdText.trim()) ? "none" : "0 4px 20px rgba(99,102,241,0.4)",
         }}>
           ✦ Analyze My Profile
         </button>

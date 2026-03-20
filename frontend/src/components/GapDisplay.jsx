@@ -10,10 +10,8 @@ export default function GapDisplay({ result }) {
   return (
     <div style={{ fontFamily: "'Sora', sans-serif" }}>
       {/* Match Score Hero */}
-      <div style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20, padding: "32px",
+      <div className="glass-panel" style={{
+        borderRadius: "var(--radius-lg)", padding: "32px",
         display: "flex", alignItems: "center", gap: 40,
         marginBottom: 24,
       }}>
@@ -111,10 +109,10 @@ export default function GapDisplay({ result }) {
 
 function SkillBox({ title, color, skills }) {
   return (
-    <div style={{
+    <div className="glass-panel" style={{
       background: `${color}08`,
-      border: `1px solid ${color}22`,
-      borderRadius: 16, padding: 20,
+      borderColor: `${color}22`,
+      borderRadius: "var(--radius-md)", padding: 20,
     }}>
       <h4 style={{
         color, margin: "0 0 16px", fontSize: 13,

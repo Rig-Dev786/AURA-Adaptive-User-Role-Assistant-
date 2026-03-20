@@ -56,25 +56,16 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-      fontFamily: "'Sora', sans-serif",
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
-      `}</style>
+    <div className="dashboard-container">
 
       <Navbar user={user} />
 
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
         {/* Upload Section */}
-        <section style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 24, padding: 32, marginBottom: 32,
+        <section className="glass-panel animate-fade-up" style={{
+          borderRadius: "var(--radius-lg)", padding: 32, marginBottom: 32,
         }}>
-          <h2 style={{ color: "#fff", margin: "0 0 24px", fontSize: 20, fontWeight: 700 }}>
+          <h2 style={{ color: "var(--text-main)", margin: "0 0 24px", fontSize: 20, fontWeight: 700 }}>
             ✦ New Analysis
           </h2>
           <UploadPanel onResult={(r) => { setResult(r); setSaved(false); }} onLoading={setLoading} />
@@ -102,30 +93,22 @@ export default function Dashboard() {
           <div ref={resultRef}>
             {/* Actions bar */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 20 }}>
-              <button onClick={handleExportPDF} style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.7)", padding: "8px 20px",
-                borderRadius: 10, fontSize: 13, cursor: "pointer",
-                fontFamily: "'Sora', sans-serif",
+              <button className="btn-secondary" onClick={handleExportPDF} style={{
+                padding: "8px 20px", borderRadius: "var(--radius-sm)", fontSize: 13
               }}>⬇ Export PDF</button>
-              <button onClick={handleSave} disabled={saving || saved} style={{
-                background: saved ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg, #6366f1, #a855f7)",
-                border: saved ? "1px solid rgba(34,197,94,0.4)" : "none",
-                color: saved ? "#86efac" : "#fff",
-                padding: "8px 20px", borderRadius: 10, fontSize: 13,
-                cursor: saving || saved ? "default" : "pointer",
-                fontFamily: "'Sora', sans-serif",
+              <button className="btn-primary" onClick={handleSave} disabled={saving || saved} style={{
+                background: saved ? "var(--success)" : undefined,
+                padding: "8px 20px", borderRadius: "var(--radius-sm)", fontSize: 13,
+                opacity: (saving || saved) ? 0.7 : 1, cursor: (saving || saved) ? "default" : "pointer"
               }}>
                 {saved ? "✓ Saved" : saving ? "Saving..." : "💾 Save Analysis"}
               </button>
             </div>
 
             {/* Gap Display */}
-            <section style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24, padding: 32, marginBottom: 24,
+            <section className="glass-panel animate-fade-up" style={{
+              borderRadius: "var(--radius-lg)", padding: 32, marginBottom: 24,
+              animationDelay: "0.1s"
             }}>
               <GapDisplay result={result} />
             </section>
@@ -136,10 +119,9 @@ export default function Dashboard() {
             </section>
 
             {/* Pathway */}
-            <section style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24, padding: 32,
+            <section className="glass-panel animate-fade-up" style={{
+              borderRadius: "var(--radius-lg)", padding: 32,
+              animationDelay: "0.3s"
             }}>
               <PathwayCard pathway={result.pathway} totalHours={result.total_hours} />
             </section>

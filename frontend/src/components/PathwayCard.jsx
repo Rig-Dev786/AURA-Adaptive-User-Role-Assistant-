@@ -41,15 +41,11 @@ export default function PathwayCard({ pathway = [], totalHours = 0 }) {
             }}>{step.order}</div>
 
             {/* Card */}
-            <div style={{
-              flex: 1,
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 16, padding: "16px 20px",
-              transition: "border-color 0.2s",
+            <div className="glass-panel hover-scale" style={{
+              flex: 1, borderRadius: "var(--radius-md)", padding: "16px 20px",
             }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(99,102,241,0.4)"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--primary-glow)"}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--glass-border)"}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <h4 style={{ color: "#fff", margin: 0, fontSize: 15, fontWeight: 600 }}>
