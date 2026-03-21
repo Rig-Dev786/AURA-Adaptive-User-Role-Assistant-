@@ -189,12 +189,58 @@ export default function Dashboard() {
 
   const handleExportPDF = async () => {
     if (!resultRef.current) return;
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg-main").trim();
-    const canvas = await html2canvas(resultRef.current, { backgroundColor: bg, scale:1.5 });
-    const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation:"portrait", unit:"px", format:[canvas.width/1.5, canvas.height/1.5] });
-    pdf.addImage(img,"PNG",0,0,canvas.width/1.5,canvas.height/1.5);
-    pdf.save("AURA_Analysis.pdf");
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    const bgColor    = isDarkMode ? '#0a0f1e' : '#f0f4f8';
+
+    // Temporarily force light background for clean PDF capture
+    const el = resultRef.current;
+    const prevBg = el.style.background;
+    if (isDarkMode) el.style.background = '#0a0f1e';
+
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: bgColor,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 1200,
+        scrollX: 0, scrollY: 0,
+        onclone: (doc) => {
+          // copy CSS vars into cloned doc so styles resolve
+          const root = doc.documentElement;
+          const vars = ['--bg-main','--bg-card','--border','--text-primary','--text-muted','--brand','--brand-light','--brand-border','--input-bg'];
+          vars.forEach(v => {
+            root.style.setProperty(v, getComputedStyle(document.documentElement).getPropertyValue(v));
+          });
+        }
+      });
+
+      const A4_W = 595, A4_H = 842;
+      const pdf  = new jsPDF({ orientation:"portrait", unit:"pt", format:"a4" });
+
+      const imgW  = canvas.width;
+      const imgH  = canvas.height;
+      const ratio = A4_W / imgW;
+      const scaledH = imgH * ratio;
+
+      const pageCount = Math.ceil(scaledH / A4_H);
+      const imgData   = canvas.toDataURL("image/jpeg", 0.92);
+
+      for (let page = 0; page < pageCount; page++) {
+        if (page > 0) pdf.addPage();
+        const yOffset = -page * A4_H;
+        pdf.addImage(imgData, "JPEG", 0, yOffset, A4_W, scaledH);
+
+        // Add page number
+        pdf.setFontSize(9);
+        pdf.setTextColor(150);
+        pdf.text(`AURA Analysis · Page ${page+1} of ${pageCount}`, A4_W/2, A4_H - 12, { align:"center" });
+      }
+
+      pdf.save(`AURA_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
+    } finally {
+      el.style.background = prevBg;
+    }
   };
 
   // Derived data
@@ -209,6 +255,20 @@ export default function Dashboard() {
   const moderateCount = gaps.filter(g => g.gap_severity > 0.5 && g.gap_severity <= 0.8).length;
   const minorCount    = gaps.filter(g => g.gap_severity <= 0.5).length;
   const scoreColor    = matchScore > 60 ? "#10b981" : matchScore > 30 ? "#f97316" : "#ef4444";
+  // Recharts can't resolve CSS vars — use hardcoded theme-aware colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Always use high-contrast white tooltip — works in both modes
+  const ttStyle = {
+    background: "#ffffff",
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: 600,
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    color: "#0d1b2a",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+    padding: "8px 14px",
+  };
 
   // ── Accurate pie chart data: Strong vs Critical vs Moderate vs Minor
   const pieData = [
@@ -338,12 +398,12 @@ export default function Dashboard() {
                         {pieData.map((entry, i) => <Cell key={i} fill={entry.color}/>)}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:10, fontSize:12, fontFamily:"var(--font-body)", color:"var(--text-primary)" }}
+                        contentStyle={ttStyle}
                         formatter={(v, n) => [`${v} skill${v!==1?"s":""}`, n]}
                       />
                       <Legend
                         iconType="circle" iconSize={8}
-                        wrapperStyle={{ fontSize:12, color:"var(--text-muted)", paddingTop:8 }}
+                        wrapperStyle={{ fontSize:12, fontWeight:600, color: isDark ? "#8eaac8" : "#5a7184", paddingTop:8, fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -366,16 +426,16 @@ export default function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
                       <XAxis
                         dataKey="name"
-                        tick={{ fontSize:10, fill:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+                        tick={{ fontSize:10, fill: isDark ? "#8eaac8" : "#5a7184", fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                         axisLine={false} tickLine={false} angle={-30} textAnchor="end" interval={0}
                       />
                       <YAxis
-                        tick={{ fontSize:10, fill:"var(--text-muted)" }}
+                        tick={{ fontSize:10, fill: isDark ? "#8eaac8" : "#5a7184" }}
                         axisLine={false} tickLine={false}
                         domain={[0,100]} tickFormatter={v=>`${v}%`}
                       />
                       <Tooltip
-                        contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:10, fontSize:12, fontFamily:"var(--font-body)", color:"var(--text-primary)" }}
+                        contentStyle={ttStyle}
                         formatter={(v) => [`${v}%`, "Severity"]}
                         cursor={{ fill:"var(--input-bg)" }}
                       />

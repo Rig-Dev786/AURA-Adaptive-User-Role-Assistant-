@@ -1,586 +1,366 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { auth } from "../firebase";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-// ─── Comprehensive Demo Profiles across all major domains ───────────────────
-const DEMO_CATEGORIES = [
-  {
-    category: "💻 Technology",
-    color: "#0891b2",
-    profiles: [
-      {
-        key: "data_engineer",
-        label: "Data Engineer",
-        icon: "🗄️",
-        jd: "We are looking for a Data Engineer with expertise in Apache Spark, Kafka, Airflow, dbt, Docker, Kubernetes, and cloud platforms (AWS/GCP). Experience with distributed systems, data pipelines, and data warehousing (Snowflake/BigQuery) is essential. Python and SQL proficiency required.",
-      },
-      {
-        key: "ml_engineer",
-        label: "ML Engineer",
-        icon: "🤖",
-        jd: "Seeking a Machine Learning Engineer with hands-on experience in TensorFlow, PyTorch, Scikit-learn, MLflow, and model deployment via REST APIs. Deep understanding of NLP, computer vision, feature engineering, and A/B testing. Familiarity with AWS SageMaker or GCP Vertex AI preferred.",
-      },
-      {
-        key: "fullstack_dev",
-        label: "Full-Stack Developer",
-        icon: "🌐",
-        jd: "Full-Stack Developer needed with strong proficiency in React, Node.js, TypeScript, REST APIs, and GraphQL. Experience with PostgreSQL, MongoDB, Redis, Docker, and CI/CD pipelines (GitHub Actions). Knowledge of system design, microservices architecture, and performance optimization required.",
-      },
-      {
-        key: "devops_engineer",
-        label: "DevOps Engineer",
-        icon: "⚙️",
-        jd: "DevOps Engineer role requires expertise in Kubernetes, Terraform, Ansible, Jenkins, GitHub Actions, Docker, and cloud infrastructure (AWS/Azure/GCP). Strong knowledge of monitoring tools (Prometheus, Grafana), logging (ELK stack), and security best practices. Linux administration skills essential.",
-      },
-      {
-        key: "cybersecurity",
-        label: "Cybersecurity Analyst",
-        icon: "🔐",
-        jd: "Cybersecurity Analyst with experience in penetration testing, SIEM tools (Splunk/QRadar), vulnerability assessment, network security, incident response, and OWASP standards. Certifications like CEH, CISSP, or CompTIA Security+ preferred. Familiarity with firewalls, IDS/IPS, and zero-trust architecture.",
-      },
-      {
-        key: "cloud_architect",
-        label: "Cloud Architect",
-        icon: "☁️",
-        jd: "Cloud Architect with deep expertise in AWS/Azure/GCP services, multi-cloud strategy, infrastructure as code (Terraform/CDK), serverless computing, cost optimization, and enterprise cloud migration. AWS Solutions Architect or Azure Solutions Expert certification preferred.",
-      },
-      {
-        key: "mobile_dev",
-        label: "Mobile App Developer",
-        icon: "📱",
-        jd: "Mobile Developer proficient in React Native or Flutter for cross-platform apps, Swift/Kotlin for native iOS/Android development. Experience with Firebase, RESTful APIs, App Store/Play Store deployment, push notifications, and offline-first architectures. UI/UX sensibility required.",
-      },
-      {
-        key: "blockchain_dev",
-        label: "Blockchain Developer",
-        icon: "⛓️",
-        jd: "Blockchain Developer with expertise in Solidity, Ethereum, Hardhat/Truffle, Web3.js/Ethers.js, smart contract auditing, DeFi protocols, and NFT standards (ERC-20, ERC-721). Knowledge of Layer-2 solutions (Polygon, Arbitrum) and IPFS storage is a strong plus.",
-      },
-    ],
-  },
-  {
-    category: "🏥 Healthcare & Life Sciences",
-    color: "#10b981",
-    profiles: [
-      {
-        key: "clinical_data_analyst",
-        label: "Clinical Data Analyst",
-        icon: "🧬",
-        jd: "Clinical Data Analyst with proficiency in SAS, R, clinical trial data management (EDC systems), CDISC standards (SDTM/ADaM), FDA regulatory submissions, and statistical analysis plans. Experience with biostatistics, patient data privacy (HIPAA), and pharmacovigilance preferred.",
-      },
-      {
-        key: "health_informatics",
-        label: "Health Informatics Specialist",
-        icon: "🏥",
-        jd: "Health Informatics Specialist with expertise in EHR systems (Epic, Cerner), HL7/FHIR standards, clinical workflows, ICD-10/CPT coding, data interoperability, and healthcare analytics. Project management (PMP) and HIMSS certification preferred.",
-      },
-      {
-        key: "biomedical_engineer",
-        label: "Biomedical Engineer",
-        icon: "⚕️",
-        jd: "Biomedical Engineer with knowledge of medical device design, FDA 510(k) regulatory process, ISO 13485, CAD software (SolidWorks), biomaterials, signal processing, and clinical testing protocols. Experience with wearable health tech, implantable devices, or diagnostics is highly desirable.",
-      },
-    ],
-  },
-  {
-    category: "💰 Finance & Business",
-    color: "#8b5cf6",
-    profiles: [
-      {
-        key: "financial_analyst",
-        label: "Financial Analyst",
-        icon: "📊",
-        jd: "Financial Analyst with proficiency in financial modeling, DCF valuation, Excel/VBA, Bloomberg Terminal, GAAP/IFRS accounting standards, budgeting, and variance analysis. CFA Level 1 or CFA charter preferred. Experience with ERP systems (SAP, Oracle) and Power BI reporting.",
-      },
-      {
-        key: "investment_banker",
-        label: "Investment Banking Analyst",
-        icon: "🏦",
-        jd: "Investment Banking Analyst with strong financial modeling skills, M&A transaction experience, LBO modeling, pitch deck preparation, due diligence coordination, and capital markets knowledge. Proficiency in Excel, PowerPoint, FactSet, and Bloomberg. Series 7/63 license preferred.",
-      },
-      {
-        key: "risk_analyst",
-        label: "Risk Analyst",
-        icon: "⚖️",
-        jd: "Risk Analyst with expertise in credit risk modeling, Basel III/IV frameworks, VaR calculations, stress testing, Python/R for quantitative analysis, and regulatory reporting (FRTB). CFA, FRM, or PRM certification preferred. Experience with SAS Risk or Moody's Analytics.",
-      },
-      {
-        key: "data_analyst_biz",
-        label: "Business Data Analyst",
-        icon: "📈",
-        jd: "Business Data Analyst with proficiency in SQL, Python, Tableau/Power BI, Excel, and A/B testing. Experience translating business requirements into analytical frameworks, creating executive dashboards, performing cohort analysis, and presenting insights to non-technical stakeholders.",
-      },
-    ],
-  },
-  {
-    category: "🎨 Design & Creative",
-    color: "#f97316",
-    profiles: [
-      {
-        key: "ux_designer",
-        label: "UX/UI Designer",
-        icon: "🎨",
-        jd: "UX/UI Designer with expertise in Figma, Adobe XD, user research, wireframing, prototyping, usability testing, design systems, and accessibility (WCAG 2.1). Portfolio demonstrating end-to-end product design process required. Knowledge of HTML/CSS and interaction design principles is a plus.",
-      },
-      {
-        key: "product_designer",
-        label: "Product Designer",
-        icon: "🖌️",
-        jd: "Product Designer with experience in human-centered design, Figma, Sketch, motion design (Principle/After Effects), end-to-end product lifecycle, design critique facilitation, and cross-functional collaboration with engineering and product teams. Strong portfolio showcasing shipped products.",
-      },
-      {
-        key: "creative_director",
-        label: "Creative Director",
-        icon: "✨",
-        jd: "Creative Director with a track record leading brand strategy, visual identity systems, campaign development, team leadership, Adobe Creative Suite mastery, and cross-channel creative execution. Experience with digital marketing, content production, and brand narrative development.",
-      },
-    ],
-  },
-  {
-    category: "⚙️ Engineering & Manufacturing",
-    color: "#eab308",
-    profiles: [
-      {
-        key: "field_ops_tech",
-        label: "Field Operations Technician",
-        icon: "🔧",
-        jd: "Role requires proficiency in SAP ERP, IoT sensor management, predictive maintenance methodologies, Six Sigma certification, and AutoCAD. Knowledge of SCADA systems, PLC programming, equipment maintenance, and safety regulations (OSHA, ISO 9001) is essential.",
-      },
-      {
-        key: "mechanical_engineer",
-        label: "Mechanical Engineer",
-        icon: "🔩",
-        jd: "Mechanical Engineer with proficiency in SolidWorks/CATIA, FEA analysis (ANSYS), GD&T, thermodynamics, fluid mechanics, manufacturing processes (CNC/3D printing), and product lifecycle management (PLM). Experience with DFMEA, design reviews, and cross-functional team collaboration.",
-      },
-      {
-        key: "electrical_engineer",
-        label: "Electrical Engineer",
-        icon: "⚡",
-        jd: "Electrical Engineer with expertise in PCB design (Altium/Eagle), embedded systems programming (C/C++), power electronics, motor drives, signal processing, circuit simulation (SPICE), and compliance testing (UL, CE, FCC). Experience with FPGA or ASIC design is a strong plus.",
-      },
-      {
-        key: "civil_engineer",
-        label: "Civil & Structural Engineer",
-        icon: "🏗️",
-        jd: "Civil Engineer with expertise in structural analysis (STAAD.Pro/SAP2000), AutoCAD, Revit BIM modeling, project management, geotechnical assessment, material testing, and construction supervision. PE licensure preferred. Knowledge of ACI, AISC, and ASCE codes required.",
-      },
-    ],
-  },
-  {
-    category: "📚 Education & Research",
-    color: "#06b6d4",
-    profiles: [
-      {
-        key: "data_scientist_research",
-        label: "Research Data Scientist",
-        icon: "🔬",
-        jd: "Research Data Scientist with strong background in statistical modeling, R/Python, experiment design, hypothesis testing, machine learning, academic writing, and grant application support. Experience publishing peer-reviewed research and working with IRB-compliant datasets preferred.",
-      },
-      {
-        key: "instructional_designer",
-        label: "Instructional Designer",
-        icon: "📖",
-        jd: "Instructional Designer with expertise in eLearning authoring tools (Articulate 360/Lectora), LMS platforms (Moodle/Canvas/Blackboard), ADDIE/SAM instructional models, HTML5, multimedia production, curriculum mapping, and learner analytics. ATD or CPTD certification preferred.",
-      },
-    ],
-  },
-  {
-    category: "🚀 Product & Management",
-    color: "#ec4899",
-    profiles: [
-      {
-        key: "product_manager",
-        label: "Product Manager",
-        icon: "🗺️",
-        jd: "Product Manager with experience in product roadmap development, Agile/Scrum methodology, Jira, user story writing, market analysis, stakeholder management, OKR frameworks, and go-to-market strategy. Technical background preferred. MBA or CSPO certification is a plus.",
-      },
-      {
-        key: "project_manager",
-        label: "Project Manager",
-        icon: "📋",
-        jd: "Project Manager with PMP certification, expertise in MS Project/Jira, Agile and Waterfall methodologies, risk management, budget control, cross-team coordination, and executive stakeholder reporting. Strong communication and problem-solving skills required.",
-      },
-      {
-        key: "scrum_master",
-        label: "Scrum Master / Agile Coach",
-        icon: "🔄",
-        jd: "Certified Scrum Master (CSM or PSM) with experience facilitating sprint ceremonies, removing impediments, coaching teams on Agile practices (SAFe/LeSS), using Jira/Confluence, and driving continuous improvement. Experience scaling Agile across multiple teams preferred.",
-      },
-    ],
-  },
-  {
-    category: "🌿 Science & Environment",
-    color: "#22c55e",
-    profiles: [
-      {
-        key: "environmental_scientist",
-        label: "Environmental Scientist",
-        icon: "🌍",
-        jd: "Environmental Scientist with expertise in EIA/EMP preparation, GIS (ArcGIS/QGIS), environmental compliance (EPA, ISO 14001), water/air quality analysis, soil sampling, ecological assessment, and sustainability reporting (GRI standards). Lab techniques and field sampling experience required.",
-      },
-      {
-        key: "sustainability_analyst",
-        label: "Sustainability Analyst",
-        icon: "♻️",
-        jd: "Sustainability Analyst with experience in ESG reporting (GRI, SASB, TCFD), carbon footprint analysis, life cycle assessment (LCA), supply chain sustainability, energy auditing, and stakeholder engagement. Knowledge of CDP disclosures and net-zero frameworks preferred.",
-      },
-    ],
-  },
+const JD_LIBRARY = [
+  // ── Data & Engineering
+  { key:"de",      cat:"Data",        emoji:"👨‍💻", label:"Data Engineer",              jd:"Senior Data Engineer with expertise in Apache Spark, Kafka, Airflow, dbt, Docker, Kubernetes, AWS/GCP, SQL, and distributed data pipeline design. Experience with data warehousing and stream processing essential." },
+  { key:"da",      cat:"Data",        emoji:"📈", label:"Data Analyst",               jd:"Data Analyst skilled in Python, SQL, Tableau, Power BI, Excel, statistical modelling, A/B testing, Google Analytics, and ETL pipelines. Strong business intelligence and data storytelling required." },
+  { key:"ds",      cat:"Data",        emoji:"🔬", label:"Data Scientist",             jd:"Data Scientist with expertise in Python, R, machine learning, scikit-learn, statistical analysis, Jupyter, SQL, feature engineering, and model evaluation. Experience deploying models to production required." },
+  { key:"bi",      cat:"Data",        emoji:"📊", label:"BI Developer",               jd:"BI Developer proficient in Power BI, Tableau, SQL Server, DAX, data modelling, ETL processes, Excel, and stakeholder reporting. Experience with Azure Synapse or Snowflake a plus." },
+  { key:"de2",     cat:"Data",        emoji:"🗄️", label:"Database Administrator",      jd:"DBA with strong skills in PostgreSQL, MySQL, Oracle, performance tuning, backup/recovery, query optimisation, indexing, and database security. Experience with cloud-managed databases required." },
+  { key:"darch",   cat:"Data",        emoji:"🏗️", label:"Data Architect",             jd:"Data Architect with expertise in data modelling, schema design, cloud data platforms (Snowflake, BigQuery, Redshift), data governance, metadata management, and enterprise data strategy." },
+  { key:"mlops",   cat:"Data",        emoji:"⚙️", label:"MLOps Engineer",             jd:"MLOps Engineer with expertise in MLflow, Kubeflow, Docker, Kubernetes, CI/CD, Python, model monitoring, feature stores, and cloud ML platforms (AWS SageMaker, GCP Vertex AI)." },
+
+  // ── AI & ML
+  { key:"mle",     cat:"AI/ML",       emoji:"🤖", label:"ML Engineer",               jd:"Machine Learning Engineer with expertise in PyTorch, TensorFlow, scikit-learn, Hugging Face, Python, MLflow, SQL, and cloud ML deployment. NLP and computer vision experience preferred." },
+  { key:"nlp",     cat:"AI/ML",       emoji:"💬", label:"NLP Engineer",              jd:"NLP Engineer with expertise in Hugging Face transformers, spaCy, BERT/GPT fine-tuning, text classification, Python, PyTorch, and deploying NLP models via REST APIs." },
+  { key:"cv",      cat:"AI/ML",       emoji:"👁️", label:"Computer Vision Engineer",  jd:"Computer Vision Engineer proficient in OpenCV, PyTorch, YOLO, image segmentation, object detection, Python, and deploying CV models on edge and cloud platforms." },
+  { key:"aie",     cat:"AI/ML",       emoji:"🧠", label:"AI Research Scientist",     jd:"AI Research Scientist with expertise in deep learning, reinforcement learning, PyTorch, TensorFlow, paper implementation, Python, CUDA, and publishing research. Strong maths background required." },
+  { key:"llm",     cat:"AI/ML",       emoji:"✨", label:"LLM / GenAI Engineer",      jd:"GenAI Engineer skilled in LangChain, LlamaIndex, OpenAI API, prompt engineering, RAG pipelines, vector databases (Pinecone, Weaviate), Python, and deploying LLM-based applications." },
+
+  // ── Software Engineering
+  { key:"be",      cat:"Engineering", emoji:"💻", label:"Backend Engineer",           jd:"Backend Engineer proficient in Python, FastAPI, PostgreSQL, Redis, Docker, Kubernetes, REST APIs, GraphQL, and CI/CD pipelines. Microservices architecture and AWS Lambda experience required." },
+  { key:"fe",      cat:"Engineering", emoji:"🎨", label:"Frontend Engineer",          jd:"Frontend Engineer with expertise in React, TypeScript, Tailwind CSS, Redux, REST APIs, Jest, Webpack/Vite, accessibility standards, and responsive design. Experience with Next.js preferred." },
+  { key:"fs",      cat:"Engineering", emoji:"🔧", label:"Full Stack Engineer",        jd:"Full Stack Engineer skilled in React, Node.js, Python, PostgreSQL, MongoDB, Docker, AWS, REST APIs, GraphQL, and CI/CD. Experience building scalable SaaS applications required." },
+  { key:"mob",     cat:"Engineering", emoji:"📱", label:"Mobile Developer",           jd:"Mobile Developer with expertise in React Native, Flutter, iOS (Swift), Android (Kotlin), REST APIs, Firebase, App Store deployment, and mobile UI/UX best practices." },
+  { key:"emb",     cat:"Engineering", emoji:"🔌", label:"Embedded Engineer",          jd:"Embedded Systems Engineer with expertise in C/C++, RTOS, ARM architecture, hardware debugging, I2C/SPI/UART protocols, PCB design, and IoT firmware development." },
+  { key:"java",    cat:"Engineering", emoji:"☕", label:"Java Developer",             jd:"Java Developer proficient in Spring Boot, Hibernate, Maven, microservices, JUnit, REST APIs, PostgreSQL, Docker, and CI/CD pipelines. Experience with Kafka and distributed systems preferred." },
+  { key:"go",      cat:"Engineering", emoji:"🐹", label:"Go / Golang Developer",      jd:"Go Developer with expertise in Golang, gRPC, REST APIs, Docker, Kubernetes, PostgreSQL, Redis, and building high-performance distributed systems. Open source contributions a plus." },
+  { key:"sre",     cat:"Engineering", emoji:"🛠️", label:"Site Reliability Engineer",  jd:"SRE with expertise in Kubernetes, Terraform, Prometheus, Grafana, incident management, SLO/SLI definition, Python, Go, and cloud platforms (AWS/GCP/Azure). On-call experience required." },
+
+  // ── DevOps & Cloud
+  { key:"devops",  cat:"DevOps",      emoji:"🚀", label:"DevOps Engineer",            jd:"DevOps Engineer with hands-on experience in Terraform, Ansible, Jenkins, GitHub Actions, Docker, Kubernetes, AWS/GCP/Azure, Linux, Prometheus, Grafana, and security best practices." },
+  { key:"cloud",   cat:"DevOps",      emoji:"☁️", label:"Cloud Architect",            jd:"Cloud Architect with expertise in AWS, GCP, Azure, infrastructure as code (Terraform), cloud-native design patterns, cost optimisation, security, and multi-cloud strategy." },
+  { key:"sec",     cat:"DevOps",      emoji:"🔒", label:"Platform Engineer",          jd:"Platform Engineer skilled in Kubernetes, Helm, ArgoCD, Terraform, GitHub Actions, Python, observability tooling, and developer experience. Experience building internal developer platforms required." },
+
+  // ── Security
+  { key:"cyber",   cat:"Security",    emoji:"🛡️", label:"Cybersecurity Analyst",     jd:"Cybersecurity Analyst with experience in penetration testing, SIEM tools, network security, incident response, OWASP, Python scripting, firewall management, and ISO 27001 / SOC 2 compliance." },
+  { key:"seceng",  cat:"Security",    emoji:"🔐", label:"Security Engineer",          jd:"Security Engineer proficient in application security, threat modelling, SAST/DAST tools, cloud security (AWS, GCP), zero-trust architecture, Python, and security automation." },
+  { key:"appsec",  cat:"Security",    emoji:"🧱", label:"AppSec Specialist",          jd:"Application Security Specialist with expertise in OWASP Top 10, code review, SAST/DAST, API security, bug bounty experience, and integrating security into CI/CD pipelines." },
+
+  // ── Product & Design
+  { key:"pm",      cat:"Product",     emoji:"📋", label:"Product Manager",            jd:"Product Manager with experience in Agile/Scrum, JIRA, product roadmap planning, A/B testing, SQL for data analysis, Figma wireframing, and stakeholder management. SaaS experience preferred." },
+  { key:"ux",      cat:"Product",     emoji:"🎭", label:"UX Designer",               jd:"UX Designer with expertise in Figma, user research, wireframing, usability testing, design systems, prototyping, accessibility, and collaborating closely with engineering teams." },
+  { key:"uiux",    cat:"Product",     emoji:"🎨", label:"UI/UX Engineer",             jd:"UI/UX Engineer combining design skills (Figma, design systems) with frontend expertise (React, CSS, animations) to build beautiful, accessible, and performant user interfaces." },
+  { key:"growth",  cat:"Product",     emoji:"📣", label:"Growth Manager",             jd:"Growth Manager skilled in SEO, SEM, Google Analytics, A/B testing, funnel optimisation, CRM tools, SQL, email marketing, and data-driven growth experimentation." },
+
+  // ── Finance & Quant
+  { key:"quant",   cat:"Finance",     emoji:"📐", label:"Quantitative Analyst",       jd:"Quantitative Analyst with expertise in Python, R, financial modelling, time series analysis, derivatives pricing, Monte Carlo simulation, SQL, and Bloomberg Terminal." },
+  { key:"fa",      cat:"Finance",     emoji:"💰", label:"Financial Analyst",          jd:"Financial Analyst skilled in Excel, financial modelling, DCF analysis, SQL, Power BI, accounting principles, budgeting, and forecasting. CFA certification preferred." },
+  { key:"risk",    cat:"Finance",     emoji:"⚖️", label:"Risk Analyst",               jd:"Risk Analyst with expertise in quantitative risk modelling, Python, SQL, VaR calculations, credit risk, regulatory reporting (Basel III), and financial data analysis." },
+
+  // ── Operations & Field
+  { key:"ops",     cat:"Operations",  emoji:"🔧", label:"Field Ops Technician",       jd:"Field Operations Technician proficient in SAP ERP, IoT sensor management, predictive maintenance, Six Sigma, AutoCAD, SCADA systems, PLC programming, and equipment maintenance." },
+  { key:"scm",     cat:"Operations",  emoji:"📦", label:"Supply Chain Manager",       jd:"Supply Chain Manager with expertise in SAP, logistics planning, inventory management, procurement, Lean/Six Sigma, ERP systems, supplier negotiation, and demand forecasting." },
+  { key:"proj",    cat:"Operations",  emoji:"📅", label:"Project Manager",            jd:"Project Manager (PMP) with expertise in Agile, Scrum, JIRA, MS Project, risk management, stakeholder communication, budgeting, and cross-functional team leadership." },
+  { key:"ops2",    cat:"Operations",  emoji:"🏭", label:"Manufacturing Engineer",     jd:"Manufacturing Engineer with expertise in CAD/CAM, Six Sigma, Lean manufacturing, CNC programming, quality control, AutoCAD, GD&T, and process improvement methodologies." },
+
+  // ── Healthcare & Science
+  { key:"bio",     cat:"Science",     emoji:"🧬", label:"Bioinformatics Engineer",    jd:"Bioinformatics Engineer with expertise in Python, R, genomic data analysis, NGS pipelines, BLAST, sequence alignment, machine learning, and cloud computing for large-scale biology." },
+  { key:"clin",    cat:"Science",     emoji:"🏥", label:"Clinical Data Scientist",    jd:"Clinical Data Scientist with expertise in R, Python, SAS, clinical trial analysis, survival analysis, biostatistics, FDA regulatory submissions, and medical data governance." },
+
+  // ── Management & Leadership
+  { key:"cto",     cat:"Leadership",  emoji:"👔", label:"CTO / VP Engineering",       jd:"CTO with expertise in engineering org design, system architecture, cloud infrastructure, Agile at scale, technical roadmap planning, stakeholder management, and team hiring." },
+  { key:"em",      cat:"Leadership",  emoji:"🧑‍💼", label:"Engineering Manager",       jd:"Engineering Manager with experience leading distributed teams, Agile/Scrum, career development, system design reviews, cross-functional collaboration, and technical decision-making." },
+
+  // ── Emerging Tech
+  { key:"block",   cat:"Emerging",    emoji:"⛓️", label:"Blockchain Developer",       jd:"Blockchain Developer with expertise in Solidity, Ethereum, Web3.js, smart contracts, DeFi protocols, Hardhat/Truffle, IPFS, and Layer 2 scaling solutions." },
+  { key:"ar",      cat:"Emerging",    emoji:"🥽", label:"AR/VR Developer",            jd:"AR/VR Developer with expertise in Unity, Unreal Engine, C#, C++, ARKit/ARCore, spatial computing, 3D modelling, and deploying experiences on Quest and HoloLens platforms." },
+  { key:"iot",     cat:"Emerging",    emoji:"🌐", label:"IoT Solutions Engineer",     jd:"IoT Solutions Engineer with expertise in MQTT, AWS IoT, edge computing, embedded C, Python, Raspberry Pi, Arduino, sensor integration, and cloud connectivity protocols." },
+  { key:"rob",     cat:"Emerging",    emoji:"🦾", label:"Robotics Engineer",          jd:"Robotics Engineer with expertise in ROS/ROS2, C++, Python, computer vision, motion planning, sensor fusion, SLAM, simulation tools (Gazebo), and embedded systems." },
+
+  // ── Support & QA
+  { key:"qa",      cat:"QA",          emoji:"🧪", label:"QA / Test Engineer",         jd:"QA Engineer proficient in Selenium, Cypress, pytest, API testing (Postman), CI/CD integration, test planning, regression testing, and performance testing with JMeter/k6." },
+  { key:"tech",    cat:"QA",          emoji:"💡", label:"Technical Writer",           jd:"Technical Writer skilled in API documentation, developer guides, Markdown, Git, Confluence, Swagger/OpenAPI, DITA, and collaborating with engineering and product teams." },
 ];
 
-// Flatten all profiles for lookup
-const ALL_PROFILES = DEMO_CATEGORIES.flatMap((cat) =>
-  cat.profiles.map((p) => ({ ...p, categoryColor: cat.color }))
-);
+const CATEGORIES = ["All", ...Array.from(new Set(JD_LIBRARY.map(j => j.cat)))];
 
 export default function UploadPanel({ onResult, onLoading }) {
-  const [file, setFile] = useState(null);
-  const [jdText, setJdText] = useState("");
-  const [dragging, setDragging] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(0);
-  const [selectedProfile, setSelectedProfile] = useState(null);
-  const fileRef = useRef();
+  const [file,        setFile]        = useState(null);
+  const [jdText,      setJdText]      = useState("");
+  const [dragging,    setDragging]    = useState(false);
+  const [activeDemo,  setActiveDemo]  = useState(null);
+  const [dropOpen,    setDropOpen]    = useState(false);
+  const [search,      setSearch]      = useState("");
+  const [activeCat,   setActiveCat]   = useState("All");
+  const fileRef   = useRef();
+  const dropRef   = useRef();
+  const searchRef = useRef();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Focus search when dropdown opens
+  useEffect(() => {
+    if (dropOpen && searchRef.current) setTimeout(() => searchRef.current?.focus(), 50);
+  }, [dropOpen]);
 
   const handleFile = (f) => {
-    if (f && (f.name.endsWith(".pdf") || f.name.endsWith(".docx"))) {
-      setFile(f);
-    }
+    if (f && (f.name.endsWith(".pdf") || f.name.endsWith(".docx"))) setFile(f);
   };
 
-  const loadDemo = (profile) => {
+  const selectProfile = (profile) => {
     setJdText(profile.jd);
-    setSelectedProfile(profile.key);
-    setDropdownOpen(false);
+    setActiveDemo(profile.key);
+    setDropOpen(false);
+    setSearch("");
   };
 
   const handleSubmit = async () => {
     if (!file || !jdText.trim()) return;
     onLoading(true);
     try {
-      const token = await auth.currentUser.getIdToken();
       const form = new FormData();
       form.append("resume_file", file);
       form.append("jd_text", jdText);
-      const { data } = await axios.post(`${BACKEND}/analyze`, form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.post(`${BACKEND}/analyze`, form);
       onResult(data);
     } catch (err) {
       console.error(err);
-      alert("Analysis failed. Is the backend running?");
+      alert("Analysis failed. Is the Flask backend running on port 5000?");
     } finally {
       onLoading(false);
     }
   };
 
-  const currentProfile = ALL_PROFILES.find((p) => p.key === selectedProfile);
+  const filtered = JD_LIBRARY.filter(p => {
+    const matchCat = activeCat === "All" || p.cat === activeCat;
+    const q = search.toLowerCase();
+    const matchQ = !q || p.label.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q) || p.jd.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  const activeProfile = JD_LIBRARY.find(p => p.key === activeDemo);
+  const canSubmit = file && jdText.trim();
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, fontFamily: "var(--font-body)" }}>
-      {/* Resume Upload */}
-      <div>
-        <label style={{
-          color: "var(--text-muted)", fontSize: 12, fontWeight: 600,
-          letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 10
-        }}>
-          Resume (PDF or DOCX)
-        </label>
-        <div
-          onClick={() => fileRef.current.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-          style={{
-            border: `2px dashed ${dragging ? "var(--brand)" : file ? "var(--success)" : "var(--border)"}`,
-            borderRadius: 14,
-            padding: "40px 24px",
-            textAlign: "center",
-            cursor: "pointer",
-            background: dragging ? "var(--brand-light)" : file ? "rgba(16,185,129,0.06)" : "var(--input-bg)",
-            minHeight: 160,
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 12,
-            boxShadow: dragging ? "0 0 40px rgba(8,145,178,0.15)" : "none",
-            transition: "all 0.3s ease",
-          }}
-          onMouseEnter={e => { if(!dragging && !file) e.currentTarget.style.borderColor = "var(--brand-border)"; }}
-          onMouseLeave={e => { if(!dragging && !file) e.currentTarget.style.borderColor = "var(--border)"; }}
-        >
-          <div style={{
-            fontSize: 36,
-            transform: dragging ? "scale(1.2) translateY(-10px)" : "scale(1)",
-            transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
-          }}>{file ? "📄" : "⬆️"}</div>
-          {file ? (
-            <>
-              <p style={{ color: "var(--brand)", fontWeight: 600, margin: 0 }}>{file.name}</p>
-              <p style={{ color: "var(--text-muted)", fontSize: 12, margin: 0 }}>Click to change</p>
-            </>
-          ) : (
-            <>
-              <p style={{ color: "var(--text-muted)", margin: 0, fontSize: 14 }}>
-                Drop your resume here
-              </p>
-              <p style={{ color: "var(--text-muted)", fontSize: 12, margin: 0, opacity: 0.6 }}>
-                PDF or DOCX supported
-              </p>
-            </>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept=".pdf,.docx"
-          style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
-      </div>
+    <div style={{ fontFamily:"var(--font-body)" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
 
-      {/* JD Input */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <label style={{
-            color: "var(--text-muted)", fontSize: 12, fontWeight: 600,
-            letterSpacing: "0.08em", textTransform: "uppercase"
-          }}>
-            Job Description
+        {/* ── LEFT: Resume upload ── */}
+        <div>
+          <label style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", letterSpacing:"0.1em", textTransform:"uppercase", display:"block", marginBottom:10 }}>
+            Resume (PDF or DOCX)
           </label>
-
-          {/* ── Demo Profile Dropdown */}
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={() => setDropdownOpen(prev => !prev)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                color: "var(--brand)", fontSize: 11, padding: "5px 12px",
-                borderRadius: 8, background: "var(--brand-light)",
-                border: "1px solid var(--brand-border)", cursor: "pointer",
-                fontWeight: 700, fontFamily: "var(--font-body)",
-                transition: "all 0.2s",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(8,145,178,0.15)"}
-              onMouseLeave={e => e.currentTarget.style.background = "var(--brand-light)"}
-            >
-              {currentProfile ? (
-                <span>{currentProfile.icon} {currentProfile.label}</span>
-              ) : (
-                <span>🎯 Demo Profiles</span>
-              )}
-              <span style={{
-                display: "inline-block",
-                transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s",
-                fontSize: 9,
-              }}>▼</span>
-            </button>
-
-            {/* Dropdown Panel */}
-            {dropdownOpen && (
-              <div style={{
-                position: "absolute", right: 0, top: "calc(100% + 8px)", zIndex: 999,
-                width: 480, maxHeight: 420,
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: 16, boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-                overflow: "hidden", display: "flex",
-                animation: "fadeUp 0.2s ease both",
-              }}>
-                {/* Left: category tabs */}
-                <div style={{
-                  width: 160, borderRight: "1px solid var(--border)",
-                  overflowY: "auto", flexShrink: 0,
-                  background: "var(--bg-main)",
-                }}>
-                  {DEMO_CATEGORIES.map((cat, i) => (
-                    <button
-                      key={cat.category}
-                      onClick={() => setActiveCategory(i)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        width: "100%", padding: "10px 14px",
-                        background: activeCategory === i ? "var(--bg-card)" : "transparent",
-                        border: "none", borderLeft: activeCategory === i ? `3px solid ${cat.color}` : "3px solid transparent",
-                        cursor: "pointer", textAlign: "left",
-                        transition: "all 0.15s",
-                        color: activeCategory === i ? "var(--text-primary)" : "var(--text-muted)",
-                        fontSize: 11.5, fontWeight: activeCategory === i ? 700 : 500,
-                        fontFamily: "var(--font-body)",
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      <span style={{ fontSize: 14 }}>
-                        {cat.category.split(" ")[0]}
-                      </span>
-                      <span>{cat.category.split(" ").slice(1).join(" ")}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Right: profile list */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-                  <div style={{
-                    fontSize: 10, fontWeight: 700,
-                    color: DEMO_CATEGORIES[activeCategory].color,
-                    letterSpacing: "0.09em", textTransform: "uppercase",
-                    padding: "8px 16px 4px",
-                  }}>
-                    {DEMO_CATEGORIES[activeCategory].category}
-                  </div>
-                  {DEMO_CATEGORIES[activeCategory].profiles.map((profile) => (
-                    <button
-                      key={profile.key}
-                      onClick={() => loadDemo(profile)}
-                      style={{
-                        display: "flex", alignItems: "flex-start", gap: 10,
-                        width: "100%", padding: "10px 16px",
-                        background: selectedProfile === profile.key
-                          ? `${DEMO_CATEGORIES[activeCategory].color}15`
-                          : "transparent",
-                        border: "none",
-                        borderLeft: selectedProfile === profile.key
-                          ? `3px solid ${DEMO_CATEGORIES[activeCategory].color}`
-                          : "3px solid transparent",
-                        cursor: "pointer", textAlign: "left",
-                        transition: "all 0.15s",
-                        fontFamily: "var(--font-body)",
-                      }}
-                      onMouseEnter={e => {
-                        if (selectedProfile !== profile.key)
-                          e.currentTarget.style.background = "var(--input-bg)";
-                      }}
-                      onMouseLeave={e => {
-                        if (selectedProfile !== profile.key)
-                          e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <span style={{ fontSize: 18, lineHeight: 1 }}>{profile.icon}</span>
-                      <div>
-                        <div style={{
-                          fontSize: 13, fontWeight: 600,
-                          color: selectedProfile === profile.key
-                            ? DEMO_CATEGORIES[activeCategory].color
-                            : "var(--text-primary)",
-                          marginBottom: 2,
-                        }}>
-                          {profile.label}
-                        </div>
-                        <div style={{
-                          fontSize: 11, color: "var(--text-muted)",
-                          lineHeight: 1.4,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}>
-                          {profile.jd.substring(0, 90)}…
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div
+            onClick={() => fileRef.current.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
+            style={{
+              border:`2px dashed ${dragging ? "var(--brand)" : file ? "var(--success)" : "var(--border)"}`,
+              borderRadius:14, padding:"36px 20px", textAlign:"center", cursor:"pointer",
+              background: dragging ? "var(--brand-light)" : file ? "rgba(16,185,129,0.06)" : "var(--input-bg)",
+              transition:"all 0.2s", minHeight:200,
+              display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10,
+            }}>
+            <div style={{ fontSize:34 }}>{file ? "📄" : "⬆️"}</div>
+            {file ? (
+              <>
+                <p style={{ color:"var(--success)", fontWeight:700, margin:0, fontSize:13 }}>{file.name}</p>
+                <p style={{ color:"var(--text-muted)", fontSize:11, margin:0 }}>Click to change</p>
+              </>
+            ) : (
+              <>
+                <p style={{ color:"var(--text-muted)", margin:0, fontSize:14, fontWeight:500 }}>Drop your resume here</p>
+                <p style={{ color:"var(--text-muted)", fontSize:11, margin:0, opacity:0.6 }}>PDF or DOCX supported</p>
+              </>
             )}
           </div>
+          <input ref={fileRef} type="file" accept=".pdf,.docx"
+            style={{ display:"none" }} onChange={(e) => handleFile(e.target.files[0])}/>
         </div>
 
-        {/* Backdrop to close dropdown */}
-        {dropdownOpen && (
-          <div
-            onClick={() => setDropdownOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 998 }}
-          />
-        )}
+        {/* ── RIGHT: JD section ── */}
+        <div>
+          {/* Header row: label + dropdown trigger */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+            <label style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", letterSpacing:"0.1em", textTransform:"uppercase" }}>
+              Job Description
+            </label>
 
-        <textarea
-          value={jdText}
-          onChange={(e) => setJdText(e.target.value)}
-          placeholder="Paste the job description here, or pick a demo profile above…"
-          style={{
-            width: "100%", height: 180, padding: 16,
-            borderRadius: 14, color: "var(--text-primary)", fontSize: 13,
-            lineHeight: 1.6, resize: "none", outline: "none",
-            boxSizing: "border-box",
-            background: "var(--input-bg)",
-            border: "1px solid var(--border)",
-            fontFamily: "var(--font-body)",
-            transition: "border-color 0.2s",
-          }}
-          onFocus={(e) => e.target.style.borderColor = "var(--brand)"}
-          onBlur={(e) => e.target.style.borderColor = "var(--border)"}
-        />
-
-        {/* Quick-select chips (most popular) */}
-        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 5 }}>
-          {[
-            { key: "data_engineer",   icon: "🗄️", label: "Data Engineer"      },
-            { key: "fullstack_dev",   icon: "🌐", label: "Full-Stack Dev"     },
-            { key: "ux_designer",     icon: "🎨", label: "UX/UI Designer"     },
-            { key: "product_manager", icon: "🗺️", label: "Product Manager"    },
-            { key: "financial_analyst", icon: "📊", label: "Finance Analyst"  },
-          ].map((quick) => {
-            const profile = ALL_PROFILES.find(p => p.key === quick.key);
-            const isActive = selectedProfile === quick.key;
-            const cat = DEMO_CATEGORIES.find(c => c.profiles.some(p => p.key === quick.key));
-            return (
+            {/* Dropdown trigger */}
+            <div ref={dropRef} style={{ position:"relative" }}>
               <button
-                key={quick.key}
-                onClick={() => profile && loadDemo(profile)}
+                onClick={() => setDropOpen(o => !o)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 4,
-                  padding: "3px 9px", borderRadius: 20,
-                  fontSize: 10.5, fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  transition: "all 0.15s",
-                  background: isActive ? `${cat?.color}22` : "var(--input-bg)",
-                  border: `1px solid ${isActive ? cat?.color + "66" : "var(--border)"}`,
-                  color: isActive ? cat?.color : "var(--text-muted)",
-                }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "var(--brand-light)"; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "var(--input-bg)"; }}
-              >
-                <span>{quick.icon}</span>
-                <span>{quick.label}</span>
+                  display:"flex", alignItems:"center", gap:7,
+                  background: activeProfile ? "var(--brand-light)" : "var(--input-bg)",
+                  border:`1px solid ${activeProfile ? "var(--brand)" : "var(--border)"}`,
+                  color: activeProfile ? "var(--brand)" : "var(--text-muted)",
+                  borderRadius:9, padding:"6px 12px",
+                  fontSize:12, fontWeight:600, cursor:"pointer",
+                  fontFamily:"var(--font-body)", transition:"all 0.18s",
+                  maxWidth:200, overflow:"hidden",
+                }}>
+                <span style={{ fontSize:14 }}>{activeProfile ? activeProfile.emoji : "📋"}</span>
+                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {activeProfile ? activeProfile.label : "Select JD template"}
+                </span>
+                <span style={{
+                  fontSize:10, marginLeft:2, flexShrink:0,
+                  transform: dropOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition:"transform 0.2s", display:"inline-block",
+                }}>▾</span>
               </button>
-            );
-          })}
-          <button
-            onClick={() => setDropdownOpen(true)}
+
+              {/* ── DROPDOWN PANEL ── */}
+              {dropOpen && (
+                <div style={{
+                  position:"absolute", top:"calc(100% + 8px)", right:0,
+                  width:360, zIndex:999,
+                  background:"var(--bg-card)",
+                  border:"1px solid var(--border)",
+                  borderRadius:14,
+                  boxShadow:"0 16px 48px rgba(0,0,0,0.25)",
+                  overflow:"hidden",
+                }}>
+                  {/* Search */}
+                  <div style={{ padding:"12px 12px 8px", borderBottom:"1px solid var(--border)" }}>
+                    <div style={{
+                      display:"flex", alignItems:"center", gap:8,
+                      background:"var(--input-bg)", border:"1px solid var(--border)",
+                      borderRadius:9, padding:"7px 12px",
+                    }}>
+                      <span style={{ fontSize:14, opacity:0.5 }}>🔍</span>
+                      <input
+                        ref={searchRef}
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search roles..."
+                        style={{
+                          flex:1, background:"none", border:"none", outline:"none",
+                          fontSize:13, color:"var(--text-primary)",
+                          fontFamily:"var(--font-body)",
+                        }}
+                      />
+                      {search && (
+                        <button onClick={() => setSearch("")} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text-muted)", fontSize:14, padding:0 }}>✕</button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Category pills */}
+                  <div style={{
+                    display:"flex", gap:5, padding:"8px 12px",
+                    overflowX:"auto", borderBottom:"1px solid var(--border)",
+                    scrollbarWidth:"none",
+                  }}>
+                    {CATEGORIES.map(cat => (
+                      <button key={cat} onClick={() => setActiveCat(cat)} style={{
+                        flexShrink:0,
+                        background: activeCat === cat ? "var(--brand)" : "var(--input-bg)",
+                        border: `1px solid ${activeCat === cat ? "var(--brand)" : "var(--border)"}`,
+                        color: activeCat === cat ? "#fff" : "var(--text-muted)",
+                        borderRadius:20, padding:"3px 10px",
+                        fontSize:11, fontWeight:600, cursor:"pointer",
+                        fontFamily:"var(--font-body)", transition:"all 0.15s",
+                        whiteSpace:"nowrap",
+                      }}>{cat}</button>
+                    ))}
+                  </div>
+
+                  {/* Results count */}
+                  <div style={{ padding:"6px 14px 4px", fontSize:10, color:"var(--text-muted)", fontWeight:600, letterSpacing:"0.06em" }}>
+                    {filtered.length} ROLE{filtered.length !== 1 ? "S" : ""}
+                  </div>
+
+                  {/* List */}
+                  <div style={{ maxHeight:280, overflowY:"auto" }}>
+                    {filtered.length === 0 ? (
+                      <div style={{ padding:"24px", textAlign:"center", color:"var(--text-muted)", fontSize:13 }}>
+                        No roles match "{search}"
+                      </div>
+                    ) : filtered.map(p => (
+                      <div
+                        key={p.key}
+                        onClick={() => selectProfile(p)}
+                        style={{
+                          display:"flex", alignItems:"center", gap:12,
+                          padding:"10px 14px", cursor:"pointer",
+                          background: activeDemo === p.key ? "var(--brand-light)" : "transparent",
+                          borderLeft:`3px solid ${activeDemo === p.key ? "var(--brand)" : "transparent"}`,
+                          transition:"all 0.15s",
+                        }}
+                        onMouseEnter={e => { if(activeDemo !== p.key) e.currentTarget.style.background="var(--input-bg)"; }}
+                        onMouseLeave={e => { if(activeDemo !== p.key) e.currentTarget.style.background="transparent"; }}
+                      >
+                        <span style={{ fontSize:20, flexShrink:0 }}>{p.emoji}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:"var(--text-primary)" }}>{p.label}</div>
+                          <div style={{ fontSize:10, color:"var(--text-muted)", fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", marginTop:1 }}>{p.cat}</div>
+                        </div>
+                        {activeDemo === p.key && (
+                          <span style={{ color:"var(--brand)", fontSize:14, flexShrink:0 }}>✓</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Textarea */}
+          <textarea
+            value={jdText}
+            onChange={(e) => { setJdText(e.target.value); setActiveDemo(null); }}
+            placeholder="Paste a job description here, or pick a template from the dropdown above..."
             style={{
-              display: "flex", alignItems: "center", gap: 4,
-              padding: "3px 9px", borderRadius: 20,
-              fontSize: 10.5, fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "var(--font-body)",
-              transition: "all 0.15s",
-              background: "var(--input-bg)",
-              border: "1px solid var(--border)",
-              color: "var(--brand)",
+              width:"100%", height:200, padding:14,
+              background:"var(--input-bg)", border:"1px solid var(--border)",
+              borderRadius:14, color:"var(--text-primary)", fontSize:13,
+              lineHeight:1.65, resize:"none", outline:"none",
+              fontFamily:"var(--font-body)", boxSizing:"border-box",
+              transition:"border-color 0.2s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "var(--brand-light)"}
-            onMouseLeave={e => e.currentTarget.style.background = "var(--input-bg)"}
+            onFocus={(e) => e.target.style.borderColor = "var(--brand)"}
+            onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+          />
+          {jdText && (
+            <div style={{ fontSize:11, color:"var(--text-muted)", marginTop:5, display:"flex", justifyContent:"space-between" }}>
+              <span>{jdText.split(/\s+/).filter(Boolean).length} words</span>
+              <button onClick={() => { setJdText(""); setActiveDemo(null); }} style={{
+                background:"none", border:"none", cursor:"pointer",
+                color:"var(--text-muted)", fontSize:11, fontFamily:"var(--font-body)", padding:0,
+              }}>Clear ✕</button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Submit ── */}
+        <div style={{ gridColumn:"1 / -1", display:"flex", justifyContent:"center", paddingTop:4 }}>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            style={{
+              background: canSubmit ? "linear-gradient(135deg,#0891b2,#06b6d4)" : "var(--input-bg)",
+              border: canSubmit ? "none" : "1px solid var(--border)",
+              color: canSubmit ? "#fff" : "var(--text-muted)",
+              padding:"13px 52px", borderRadius:12, fontSize:15, fontWeight:700,
+              cursor: canSubmit ? "pointer" : "not-allowed",
+              fontFamily:"var(--font-body)", transition:"all 0.25s",
+              boxShadow: canSubmit ? "0 4px 20px rgba(8,145,178,0.38)" : "none",
+              display:"flex", alignItems:"center", gap:10,
+            }}
+            onMouseEnter={e => { if(canSubmit) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 28px rgba(8,145,178,0.5)"; }}}
+            onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow=canSubmit?"0 4px 20px rgba(8,145,178,0.38)":"none"; }}
           >
-            + More roles
+            {canSubmit
+              ? <><span>✦</span> Analyze My Profile</>
+              : "Upload resume + select a JD to begin"
+            }
           </button>
         </div>
-      </div>
-
-      {/* Submit */}
-      <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center" }}>
-        <button onClick={handleSubmit} disabled={!file || !jdText.trim()} style={{
-          padding: "16px 48px",
-          borderRadius: 12, fontSize: 16,
-          opacity: (!file || !jdText.trim()) ? 0.3 : 1,
-          cursor: (!file || !jdText.trim()) ? "not-allowed" : "pointer",
-          background: "linear-gradient(135deg,#0891b2,#06b6d4)",
-          border: "none", color: "#fff", fontWeight: 700,
-          fontFamily: "var(--font-body)",
-          boxShadow: "0 4px 16px rgba(8,145,178,0.3)",
-          transition: "all 0.25s ease",
-        }}
-          onMouseEnter={e => { if(file && jdText.trim()) e.currentTarget.style.transform = "translateY(-2px)"; }}
-          onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          ✦ Analyze My Profile
-        </button>
       </div>
     </div>
   );

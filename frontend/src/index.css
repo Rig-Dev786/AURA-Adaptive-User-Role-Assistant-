@@ -27,17 +27,17 @@
 }
 
 [data-theme="dark"] {
-  --bg-main:       #070c18;
-  --bg-card:       #0f1829;
-  --bg-sidebar:    rgba(7,12,24,0.98);
-  --border:        rgba(255,255,255,0.07);
-  --text-primary:  #e8f0f7;
-  --text-muted:    #7a9bb5;
+  --bg-main:       #080d1a;
+  --bg-card:       #111c2d;
+  --bg-sidebar:    rgba(8,13,26,0.98);
+  --border:        rgba(255,255,255,0.12);
+  --text-primary:  #f0f6ff;
+  --text-muted:    #8eaac8;
   --brand:         #06b6d4;
   --brand-2:       #22d3ee;
-  --brand-light:   rgba(6,182,212,0.1);
-  --brand-border:  rgba(6,182,212,0.22);
-  --input-bg:      rgba(255,255,255,0.04);
+  --brand-light:   rgba(6,182,212,0.12);
+  --brand-border:  rgba(6,182,212,0.3);
+  --input-bg:      rgba(255,255,255,0.07);
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
