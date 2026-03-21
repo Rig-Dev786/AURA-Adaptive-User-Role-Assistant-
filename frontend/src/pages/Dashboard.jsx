@@ -6,7 +6,6 @@ import Sidebar from "../components/Sidebar";
 import UploadPanel from "../components/UploadPanel";
 import axios from "axios";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -237,309 +236,149 @@ export default function Dashboard() {
     const TW = W - ML - MR;
     let y = MT;
 
-    // ── Colors ──
     const C = {
-      brand:  [8, 145, 178],
-      brand2: [6, 182, 212],
-      dark:   [13, 27, 42],
-      muted:  [90, 113, 132],
-      light:  [240, 244, 248],
-      white:  [255, 255, 255],
-      red:    [239, 68, 68],
-      orange: [249, 115, 22],
-      yellow: [234, 179, 8],
-      green:  [16, 185, 129],
-      purple: [139, 92, 246],
-      bg:     [247, 250, 253],
-      border: [226, 232, 240],
+      brand:[8,145,178], dark:[13,27,42], muted:[90,113,132],
+      light:[240,244,248], white:[255,255,255],
+      red:[239,68,68], orange:[249,115,22], yellow:[234,179,8],
+      green:[16,185,129], purple:[139,92,246], bg:[247,250,253], border:[226,232,240],
     };
 
-    const sev = (s) => s > 0.8 ? C.red : s > 0.5 ? C.orange : C.yellow;
-    const sevLabel = (s) => s > 0.8 ? "Critical" : s > 0.5 ? "Moderate" : "Minor";
+    const sev    = s => s>0.8?C.red:s>0.5?C.orange:C.yellow;
+    const sevLbl = s => s>0.8?"Critical":s>0.5?"Moderate":"Minor";
+    const newPage = () => { pdf.addPage(); y=MT; };
+    const checkY  = (n=30) => { if(y+n>H-48) newPage(); };
 
-    const newPage = () => { pdf.addPage(); y = MT; };
-    const checkY  = (n=30) => { if (y + n > H - 48) newPage(); };
-
-    const font = (size, weight="normal", color=C.dark) => {
-      pdf.setFontSize(size);
-      pdf.setFont("helvetica", weight);
-      pdf.setTextColor(...color);
+    const font = (size,weight="normal",color=C.dark) => {
+      pdf.setFontSize(size); pdf.setFont("helvetica",weight); pdf.setTextColor(...color);
     };
-
-    const rect = (x, ry, w, h, fill, r=3) => {
+    const rect = (x,ry,w,h,fill,r=3) => {
       pdf.setFillColor(...fill);
-      if (r) pdf.roundedRect(x, ry, w, h, r, r, "F");
-      else   pdf.rect(x, ry, w, h, "F");
+      r ? pdf.roundedRect(x,ry,w,h,r,r,"F") : pdf.rect(x,ry,w,h,"F");
     };
-
-    const border = (x, ry, w, h, stroke, r=3, lw=0.5) => {
-      pdf.setDrawColor(...stroke);
-      pdf.setLineWidth(lw);
-      if (r) pdf.roundedRect(x, ry, w, h, r, r, "S");
-      else   pdf.rect(x, ry, w, h, "S");
+    const border = (x,ry,w,h,stroke,r=3,lw=0.5) => {
+      pdf.setDrawColor(...stroke); pdf.setLineWidth(lw);
+      r ? pdf.roundedRect(x,ry,w,h,r,r,"S") : pdf.rect(x,ry,w,h,"S");
     };
-
-    const line = (x1, ly, x2, col=C.border, lw=0.5) => {
-      pdf.setDrawColor(...col);
-      pdf.setLineWidth(lw);
-      pdf.line(x1, ly, x2, ly);
+    const line = (x1,ly,x2,col=C.border,lw=0.5) => {
+      pdf.setDrawColor(...col); pdf.setLineWidth(lw); pdf.line(x1,ly,x2,ly);
     };
-
-    const chip = (x, cy, label, fill, textCol) => {
-      const tw = pdf.getTextWidth(label);
-      const cw = tw + 12, ch = 14;
-      rect(x, cy, cw, ch, fill, 3);
-      font(7, "bold", textCol);
-      pdf.text(label, x + 6, cy + 10);
-      return cw;
-    };
-
     const sectionTitle = (title) => {
       checkY(36);
-      // Left accent bar
-      rect(ML, y, 3, 18, C.brand, 1);
-      font(12, "bold", C.dark);
-      pdf.text(title, ML + 10, y + 13);
-      y += 24;
+      rect(ML,y,3,16,C.brand,1);
+      font(11,"bold",C.dark);
+      pdf.text(title,ML+10,y+12);
+      y+=22;
     };
 
-    // ══════════════════════════════════════════════
-    // PAGE 1
-    // ══════════════════════════════════════════════
+    // ── HEADER
+    rect(0,0,W,72,C.brand,0);
+    font(18,"bold",C.white); pdf.text("AURA",ML,26);
+    font(8,"normal",[180,225,240]); pdf.text("AI-Adaptive Onboarding Engine",ML,38);
+    font(8,"normal",[180,225,240]); pdf.text(`Generated ${new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}`,ML,50);
+    const sc = result.match_score>60?C.green:result.match_score>30?C.orange:C.red;
+    rect(W-MR-72,8,72,56,[255,255,255,20],5);
+    font(24,"bold",C.white); pdf.text(`${result.match_score}%`,W-MR-36,38,{align:"center"});
+    font(7,"normal",[200,230,240]); pdf.text("MATCH SCORE",W-MR-36,52,{align:"center"});
+    y=88;
 
-    // Header band
-    rect(0, 0, W, 78, C.brand, 0);
-    rect(0, 0, W, 78, [6,182,212,30], 0); // subtle overlay
-
-    // AURA logo text
-    font(20, "bold", C.white);
-    pdf.text("AURA", ML, 28);
-    font(9, "normal", [180,225,240]);
-    pdf.text("AI-Adaptive Onboarding Engine", ML, 42);
-
-    // Date + score on right
-    const scoreCol = result.match_score > 60 ? C.green : result.match_score > 30 ? C.orange : C.red;
-    rect(W - MR - 80, 10, 80, 56, [255,255,255,20], 6);
-    font(28, "bold", C.white);
-    pdf.text(`${result.match_score}%`, W - MR - 40, 40, { align:"center" });
-    font(7.5, "normal", [200,230,240]);
-    pdf.text("MATCH SCORE", W - MR - 40, 54, { align:"center" });
-
-    font(8, "normal", [180,220,235]);
-    pdf.text(`Generated ${new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}`, ML, 58);
-    y = 96;
-
-    // ── Metric cards row ──
-    const cards = [
-      { label:"Your Skills",   val:`${result.user_skills?.length ?? 0}`, col:C.green  },
-      { label:"Role Requires", val:`${result.jd_skills?.length ?? 0}`,   col:C.brand  },
-      { label:"Gaps Found",    val:`${result.gaps?.length ?? 0}`,         col:C.red    },
-      { label:"Learning Time", val:`${result.total_hours}h`,              col:C.purple },
+    // ── METRIC CARDS
+    const cards=[
+      {label:"Your Skills",   val:`${result.user_skills?.length??0}`, col:C.green},
+      {label:"Role Requires", val:`${result.jd_skills?.length??0}`,   col:C.brand},
+      {label:"Gaps Found",    val:`${result.gaps?.length??0}`,         col:C.red},
+      {label:"Learning Time", val:`${result.total_hours}h`,            col:C.purple},
     ];
-    const cw4 = (TW - 12) / 4;
-    cards.forEach((c,i) => {
-      const cx = ML + i*(cw4+4);
-      rect(cx, y, cw4, 52, C.bg, 4);
-      border(cx, y, cw4, 52, C.border, 4);
-      // top accent
-      pdf.setDrawColor(...c.col);
-      pdf.setLineWidth(2.5);
-      pdf.line(cx, y, cx+cw4, y);
-      font(7, "bold", C.muted);
-      pdf.text(c.label.toUpperCase(), cx+cw4/2, y+16, { align:"center" });
-      font(20, "bold", c.col);
-      pdf.text(c.val, cx+cw4/2, y+38, { align:"center" });
+    const cw4=(TW-12)/4;
+    cards.forEach((cd,i)=>{
+      const cx=ML+i*(cw4+4);
+      rect(cx,y,cw4,50,C.bg,4); border(cx,y,cw4,50,C.border,4);
+      pdf.setDrawColor(...cd.col); pdf.setLineWidth(2.5); pdf.line(cx,y,cx+cw4,y);
+      font(7,"bold",C.muted); pdf.text(cd.label.toUpperCase(),cx+cw4/2,y+15,{align:"center"});
+      font(18,"bold",cd.col); pdf.text(cd.val,cx+cw4/2,y+36,{align:"center"});
     });
-    y += 62;
+    y+=60; line(ML,y,W-MR); y+=14;
 
-    line(ML, y, W-MR, C.border, 0.5);
-    y += 16;
-
-    // ── Gap Analysis ──
+    // ── GAP ANALYSIS
     sectionTitle("Skill Gap Analysis");
-
-    if (!result.gaps?.length) {
-      rect(ML, y, TW, 36, [240,253,244], 6);
-      border(ML, y, TW, 36, C.green, 6);
-      font(10, "bold", C.green);
-      pdf.text("No skill gaps found — strong match for this role!", ML + TW/2, y+22, { align:"center" });
-      y += 44;
+    if(!result.gaps?.length){
+      checkY(30); font(10,"bold",C.green);
+      pdf.text("No skill gaps found — strong match for this role!",ML,y+14); y+=30;
     } else {
-      // Table header
-      rect(ML, y, TW, 20, [235,242,248], 3);
-      font(7, "bold", C.muted);
-      pdf.text("#",          ML+6,        y+13);
-      pdf.text("Skill",      ML+22,       y+13);
-      pdf.text("Severity",   ML+TW*0.44,  y+13);
-      pdf.text("Level",      ML+TW*0.60,  y+13);
-      pdf.text("Course",     ML+TW*0.72,  y+13);
-      y += 22;
-
-      result.gaps.forEach((gap, i) => {
+      rect(ML,y,TW,20,[235,242,248],3);
+      font(7,"bold",C.muted);
+      pdf.text("#",ML+6,y+13); pdf.text("Skill",ML+22,y+13);
+      pdf.text("Severity",ML+TW*0.44,y+13); pdf.text("Level",ML+TW*0.60,y+13);
+      pdf.text("Course",ML+TW*0.72,y+13);
+      y+=22;
+      result.gaps.forEach((gap,i)=>{
         checkY(22);
-        rect(ML, y, TW, 20, i%2===0 ? C.white : C.bg, 2);
-
-        const pct = Math.round(gap.gap_severity * 100);
-        const sc  = sev(gap.gap_severity);
-        const sl  = sevLabel(gap.gap_severity);
-
-        font(7.5, "bold", C.dark);
-        pdf.text(String(i+1).padStart(2,"0"), ML+6, y+13);
-
-        font(8, "bold", C.dark);
-        const sk = gap.skill.length > 24 ? gap.skill.slice(0,22)+"…" : gap.skill;
-        pdf.text(sk, ML+22, y+13);
-
-        // Severity bar
-        const bx = ML+TW*0.44, bw = TW*0.12;
-        rect(bx, y+7, bw, 6, C.border, 2);
-        rect(bx, y+7, bw*pct/100, 6, sc, 2);
-        font(7, "normal", C.muted);
-        pdf.text(`${pct}%`, bx+bw+4, y+13);
-
-        // Level chip
-        rect(ML+TW*0.60, y+4, 44, 13, [...sc, 25], 3);
-        font(7, "bold", sc);
-        pdf.text(sl, ML+TW*0.60+22, y+13, { align:"center" });
-
-        // Course name
-        const ct = (gap.recommended_course?.title||"").slice(0,30);
-        font(7, "normal", C.brand);
-        pdf.text(ct, ML+TW*0.72, y+13);
-
-        y += 22;
+        rect(ML,y,TW,20,i%2===0?C.white:C.bg,2);
+        const pct=Math.round(gap.gap_severity*100), sc2=sev(gap.gap_severity), sl=sevLbl(gap.gap_severity);
+        font(7.5,"bold",C.dark); pdf.text(String(i+1).padStart(2,"0"),ML+6,y+13);
+        font(8,"bold",C.dark); pdf.text((gap.skill.length>24?gap.skill.slice(0,22)+"…":gap.skill),ML+22,y+13);
+        const bx=ML+TW*0.44,bw=TW*0.12;
+        rect(bx,y+7,bw,6,C.border,2); rect(bx,y+7,bw*pct/100,6,sc2,2);
+        font(7,"normal",C.muted); pdf.text(`${pct}%`,bx+bw+4,y+13);
+        rect(ML+TW*0.60,y+4,44,13,[...sc2,25],3);
+        font(7,"bold",sc2); pdf.text(sl,ML+TW*0.60+22,y+13,{align:"center"});
+        const ct=(gap.recommended_course?.title||"").slice(0,30);
+        font(7,"normal",C.brand); pdf.text(ct,ML+TW*0.72,y+13);
+        y+=22;
       });
     }
+    y+=8; line(ML,y,W-MR); y+=14;
 
-    y += 8; line(ML, y, W-MR); y += 16;
-
-    // ── Learning Pathway ──
-    checkY(50);
+    // ── LEARNING PATHWAY
     sectionTitle("Personalised Learning Pathway");
-
-    font(8, "normal", C.muted);
-    pdf.text(`${result.total_hours}h total  ·  ${result.pathway?.length||0} courses  ·  All free`, ML, y);
-    y += 16;
-
-    (result.pathway||[]).forEach((step, i) => {
+    font(8,"normal",C.muted);
+    pdf.text(`${result.total_hours}h total  ·  ${result.pathway?.length||0} courses  ·  All free`,ML,y);
+    y+=14;
+    (result.pathway||[]).forEach((step,i)=>{
       checkY(50);
-
-      // Circle
-      pdf.setFillColor(...C.brand);
-      pdf.circle(ML+10, y+12, 9, "F");
-      font(8, "bold", C.white);
-      pdf.text(String(step.order), ML+10, y+15, { align:"center" });
-
-      // Connector line
-      if (i < (result.pathway?.length||0)-1) {
-        pdf.setDrawColor(...C.brand, 60);
-        pdf.setLineWidth(1);
-        pdf.line(ML+10, y+22, ML+10, y+50);
-      }
-
-      // Card
-      rect(ML+26, y, TW-26, 44, C.bg, 5);
-      border(ML+26, y, TW-26, 44, C.border, 5);
-
-      // Left accent
-      rect(ML+26, y, 3, 44, C.brand, 0);
-
-      font(9, "bold", C.dark);
-      const titleText = step.title.length > 55 ? step.title.slice(0,53)+"…" : step.title;
-      pdf.text(titleText, ML+36, y+14);
-
-      font(7.5, "normal", C.muted);
-      const whyText = (step.why||"").slice(0,85);
-      pdf.text(whyText, ML+36, y+26, { maxWidth: TW-80 });
-
-      // Hours badge + URL
-      font(7.5, "bold", C.brand);
-      pdf.text(`${step.duration_hours}h`, W-MR-4, y+14, { align:"right" });
-
-      if (step.url) {
-        const urlDisplay = step.url.startsWith("/roadmap/")
-          ? `roadmap.sh${step.url.replace("/roadmap/","/")}` : step.url;
-        font(6.5, "normal", C.brand);
-        pdf.text(urlDisplay.slice(0,60), ML+36, y+38);
-      }
-
-      y += 52;
+      pdf.setFillColor(...C.brand); pdf.circle(ML+10,y+12,9,"F");
+      font(8,"bold",C.white); pdf.text(String(step.order),ML+10,y+15,{align:"center"});
+      if(i<(result.pathway?.length||0)-1){ pdf.setDrawColor(...C.brand,60); pdf.setLineWidth(1); pdf.line(ML+10,y+22,ML+10,y+50); }
+      rect(ML+26,y,TW-26,44,C.bg,5); border(ML+26,y,TW-26,44,C.border,5);
+      rect(ML+26,y,3,44,C.brand,0);
+      font(9,"bold",C.dark); pdf.text((step.title.length>55?step.title.slice(0,53)+"…":step.title),ML+36,y+14);
+      font(7.5,"normal",C.muted); pdf.text((step.why||"").slice(0,85),ML+36,y+26,{maxWidth:TW-80});
+      font(7.5,"bold",C.brand); pdf.text(`${step.duration_hours}h`,W-MR-4,y+14,{align:"right"});
+      if(step.url){ const u=step.url.startsWith("/roadmap/")?`roadmap.sh${step.url.replace("/roadmap/","/")}`:step.url; font(6.5,"normal",C.brand); pdf.text(u.slice(0,60),ML+36,y+38); }
+      y+=52;
     });
+    y+=8; line(ML,y,W-MR); y+=14;
 
-    y += 8; line(ML, y, W-MR); y += 16;
-
-    // ── AI Reasoning ──
-    checkY(60);
+    // ── AI REASONING
     sectionTitle("AI Reasoning");
+    rect(ML,y,TW,6,C.brand,0); y+=12;
+    font(9,"normal",C.dark);
+    pdf.splitTextToSize(result.reasoning||"",TW).forEach(l=>{ checkY(14); pdf.text(l,ML,y); y+=14; });
+    y+=10; line(ML,y,W-MR); y+=14;
 
-    rect(ML, y, TW, 8, C.brand, 0);
-    y += 14;
-
-    font(9, "normal", C.dark);
-    const rLines = pdf.splitTextToSize(result.reasoning||"", TW);
-    rLines.forEach(l => { checkY(14); pdf.text(l, ML, y); y += 14; });
-
-    y += 12; line(ML, y, W-MR); y += 16;
-
-    // ── Skills ──
-    checkY(40);
+    // ── SKILLS
     sectionTitle("Your Skills vs Role Requirements");
-
-    const half = (TW - 8) / 2;
-
-    // Your skills header
-    rect(ML, y, half, 18, C.green, 4);
-    font(8, "bold", C.white);
-    pdf.text(`Your Skills  (${result.user_skills?.length||0})`, ML+8, y+12);
-
-    // Gaps header
-    rect(ML+half+8, y, half, 18, C.red, 4);
-    font(8, "bold", C.white);
-    pdf.text(`Gaps  (${result.gaps?.length||0})`, ML+half+16, y+12);
-    y += 22;
-
-    const maxRows = Math.max(
-      Math.ceil((result.user_skills?.length||0)/2),
-      result.gaps?.length||0
-    );
-
-    for (let row = 0; row < maxRows; row++) {
+    const half=(TW-8)/2;
+    rect(ML,y,half,18,C.green,4); font(8,"bold",C.white); pdf.text(`Your Skills (${result.user_skills?.length||0})`,ML+8,y+12);
+    rect(ML+half+8,y,half,18,C.red,4); font(8,"bold",C.white); pdf.text(`Gaps (${result.gaps?.length||0})`,ML+half+16,y+12);
+    y+=22;
+    const maxRows=Math.max(Math.ceil((result.user_skills?.length||0)/2),result.gaps?.length||0);
+    for(let row=0;row<maxRows;row++){
       checkY(16);
-
-      // Your skills — 2 per row
-      [0,1].forEach(col => {
-        const idx = row*2+col;
-        const s = (result.user_skills||[])[idx];
-        if (!s) return;
-        const sx = ML + col*(half/2);
-        rect(sx, y, half/2-4, 13, [240,250,244], 2);
-        font(7, "normal", [20,80,60]);
-        pdf.text(s.length>14?s.slice(0,12)+"…":s, sx+4, y+9);
-      });
-
-      // Gap
-      const g = (result.gaps||[])[row];
-      if (g) {
-        const sc = sev(g.gap_severity);
-        rect(ML+half+8, y, half-4, 13, [...sc, 20], 2);
-        font(7, "bold", sc);
-        pdf.text(g.skill.length>22?g.skill.slice(0,20)+"…":g.skill, ML+half+12, y+9);
-      }
-
-      y += 17;
+      [0,1].forEach(col=>{ const s=(result.user_skills||[])[row*2+col]; if(!s)return; const sx=ML+col*(half/2); rect(sx,y,half/2-4,13,[240,250,244],2); font(7,"normal",[20,80,60]); pdf.text(s.length>14?s.slice(0,12)+"…":s,sx+4,y+9); });
+      const g=(result.gaps||[])[row];
+      if(g){ const sc3=sev(g.gap_severity); rect(ML+half+8,y,half-4,13,[...sc3,20],2); font(7,"bold",sc3); pdf.text(g.skill.length>22?g.skill.slice(0,20)+"…":g.skill,ML+half+12,y+9); }
+      y+=17;
     }
 
-    // ── Footer on all pages ──
-    const total = pdf.internal.getNumberOfPages();
-    for (let p = 1; p <= total; p++) {
+    // ── FOOTER
+    const total=pdf.internal.getNumberOfPages();
+    for(let p=1;p<=total;p++){
       pdf.setPage(p);
-      rect(0, H-28, W, 28, C.light, 0);
-      line(0, H-28, W, C.border, 0.5);
-      font(7, "normal", C.muted);
-      pdf.text("AURA — AI-Adaptive Onboarding Engine", ML, H-12);
-      pdf.text(`Page ${p} of ${total}`, W-MR, H-12, { align:"right" });
-      font(7, "normal", [...C.brand]);
-      pdf.text("aura.ai", W/2, H-12, { align:"center" });
+      rect(0,H-28,W,28,C.light,0);
+      line(0,H-28,W,C.border,0.5);
+      font(7,"normal",C.muted); pdf.text("AURA — AI-Adaptive Onboarding Engine",ML,H-12);
+      pdf.text(`Page ${p} of ${total}`,W-MR,H-12,{align:"right"});
+      font(7,"normal",[...C.brand]); pdf.text("aura.ai",W/2,H-12,{align:"center"});
     }
 
     pdf.save(`AURA_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
