@@ -6,7 +6,6 @@ import Sidebar from "../components/Sidebar";
 import UploadPanel from "../components/UploadPanel";
 import axios from "axios";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -19,6 +18,34 @@ const SEV = (s) => s > 0.8
   : s > 0.5
   ? { color:"#f97316", bg:"rgba(249,115,22,0.08)", label:"Moderate" }
   : { color:"#eab308", bg:"rgba(234,179,8,0.08)",  label:"Minor" };
+
+
+// SmartLink — internal /roadmap/ routes use navigate, external use <a>
+function SmartLink({ url, label="View Roadmap →" }) {
+  const navigate = useNavigate();
+  const isInternal = url && url.startsWith("/roadmap/");
+  if (!url) return null;
+  if (isInternal) {
+    return (
+      <button onClick={() => navigate(url)} style={{
+        flexShrink:0, background:"var(--brand-light)", border:"1px solid var(--brand-border)",
+        borderRadius:20, padding:"4px 12px", fontSize:11, fontWeight:700,
+        color:"var(--brand)", cursor:"pointer", fontFamily:"var(--font-body)",
+        whiteSpace:"nowrap", transition:"all 0.15s",
+      }}
+        onMouseEnter={e=>{e.currentTarget.style.background="var(--brand)";e.currentTarget.style.color="#fff";}}
+        onMouseLeave={e=>{e.currentTarget.style.background="var(--brand-light)";e.currentTarget.style.color="var(--brand)";}}
+      >{label}</button>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" style={{
+      flexShrink:0, background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)",
+      borderRadius:20, padding:"4px 12px", fontSize:11, fontWeight:700,
+      color:"#34d399", textDecoration:"none", whiteSpace:"nowrap",
+    }}>↗ Open</a>
+  );
+}
 
 // ── Metric card
 function MetricCard({ label, value, sub, accent="#0891b2", delay=0 }) {
@@ -93,13 +120,7 @@ function GapRow({ gap, index }) {
         <span style={{ fontSize:12, color:"var(--text-muted)", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
           {gap.recommended_course?.title}
         </span>
-        {gap.recommended_course?.url && (
-          <a href={gap.recommended_course.url} target="_blank" rel="noreferrer" style={{
-            flexShrink:0, background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)",
-            borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, color:"#059669",
-            textDecoration:"none", whiteSpace:"nowrap",
-          }}>Free ↗</a>
-        )}
+        {gap.recommended_course?.url && <SmartLink url={gap.recommended_course.url}/>}
       </div>
     </div>
   );
@@ -133,13 +154,7 @@ function PathwayStep({ step, total, index }) {
           </div>
           <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:12 }}>
             <span style={{ background:"var(--brand-light)", border:"1px solid var(--brand-border)", borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600, color:"var(--brand)" }}>⏱ {step.duration_hours}h</span>
-            {step.url && (
-              <a href={step.url} target="_blank" rel="noreferrer" style={{
-                background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)",
-                borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600,
-                color:"#059669", textDecoration:"none",
-              }}>Free ↗</a>
-            )}
+            {step.url && <SmartLink url={step.url}/>}
           </div>
         </div>
         <div style={{ marginTop:10, height:3, background:"var(--border)", borderRadius:2 }}>
@@ -170,31 +185,203 @@ export default function Dashboard() {
   const [result, setResult]     = useState(null);
   const [loading, setLoading]   = useState(false);
   const [saved, setSaved]       = useState(false);
+  const [saving, setSaving]     = useState(false);
   const [activeTab, setActiveTab] = useState("gaps");
   const resultRef = useRef();
   const navigate  = useNavigate();
 
   useEffect(() => {
+    // Restore last result from sessionStorage when navigating back from roadmap
+    const saved = sessionStorage.getItem("aura-last-result");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setResult(parsed);
+        setSaved(false);
+      } catch(e) {}
+    }
     return onAuthStateChanged(auth, (u) => { if (!u) navigate("/"); else setUser(u); });
   }, []);
 
   const handleSave = async () => {
-    if (!result) return;
+    if (!result || saved) return;
+    setSaving(true);
     try {
-      const token = await auth.currentUser.getIdToken();
-      await axios.post(`${BACKEND}/save`, { analysis_id: result.analysis_id }, { headers:{ Authorization:`Bearer ${token}` } });
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        alert("Please sign in to save analyses.");
+        setSaving(false);
+        return;
+      }
+      // Send the FULL result so backend can store it
+      await axios.post(
+        `${BACKEND}/save`,
+        { analysis_id: result.analysis_id, result },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setSaved(true);
-    } catch(e) { console.error(e); }
+    } catch(e) {
+      console.error("Save failed:", e);
+      alert("Save failed — check console for details.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleExportPDF = async () => {
-    if (!resultRef.current) return;
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg-main").trim();
-    const canvas = await html2canvas(resultRef.current, { backgroundColor: bg, scale:1.5 });
-    const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation:"portrait", unit:"px", format:[canvas.width/1.5, canvas.height/1.5] });
-    pdf.addImage(img,"PNG",0,0,canvas.width/1.5,canvas.height/1.5);
-    pdf.save("AURA_Analysis.pdf");
+  const handleExportPDF = () => {
+    if (!result) return;
+
+    const pdf = new jsPDF({ orientation:"portrait", unit:"pt", format:"a4" });
+    const W=595, H=842, ML=44, MR=44, MT=52;
+    const TW = W - ML - MR;
+    let y = MT;
+
+    const C = {
+      brand:[8,145,178], dark:[13,27,42], muted:[90,113,132],
+      light:[240,244,248], white:[255,255,255],
+      red:[239,68,68], orange:[249,115,22], yellow:[234,179,8],
+      green:[16,185,129], purple:[139,92,246], bg:[247,250,253], border:[226,232,240],
+    };
+
+    const sev    = s => s>0.8?C.red:s>0.5?C.orange:C.yellow;
+    const sevLbl = s => s>0.8?"Critical":s>0.5?"Moderate":"Minor";
+    const newPage = () => { pdf.addPage(); y=MT; };
+    const checkY  = (n=30) => { if(y+n>H-48) newPage(); };
+
+    const font = (size,weight="normal",color=C.dark) => {
+      pdf.setFontSize(size); pdf.setFont("helvetica",weight); pdf.setTextColor(...color);
+    };
+    const rect = (x,ry,w,h,fill,r=3) => {
+      pdf.setFillColor(...fill);
+      r ? pdf.roundedRect(x,ry,w,h,r,r,"F") : pdf.rect(x,ry,w,h,"F");
+    };
+    const border = (x,ry,w,h,stroke,r=3,lw=0.5) => {
+      pdf.setDrawColor(...stroke); pdf.setLineWidth(lw);
+      r ? pdf.roundedRect(x,ry,w,h,r,r,"S") : pdf.rect(x,ry,w,h,"S");
+    };
+    const line = (x1,ly,x2,col=C.border,lw=0.5) => {
+      pdf.setDrawColor(...col); pdf.setLineWidth(lw); pdf.line(x1,ly,x2,ly);
+    };
+    const sectionTitle = (title) => {
+      checkY(36);
+      rect(ML,y,3,16,C.brand,1);
+      font(11,"bold",C.dark);
+      pdf.text(title,ML+10,y+12);
+      y+=22;
+    };
+
+    // ── HEADER
+    rect(0,0,W,72,C.brand,0);
+    font(18,"bold",C.white); pdf.text("AURA",ML,26);
+    font(8,"normal",[180,225,240]); pdf.text("AI-Adaptive Onboarding Engine",ML,38);
+    font(8,"normal",[180,225,240]); pdf.text(`Generated ${new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}`,ML,50);
+    const sc = result.match_score>60?C.green:result.match_score>30?C.orange:C.red;
+    rect(W-MR-72,8,72,56,[255,255,255,20],5);
+    font(24,"bold",C.white); pdf.text(`${result.match_score}%`,W-MR-36,38,{align:"center"});
+    font(7,"normal",[200,230,240]); pdf.text("MATCH SCORE",W-MR-36,52,{align:"center"});
+    y=88;
+
+    // ── METRIC CARDS
+    const cards=[
+      {label:"Your Skills",   val:`${result.user_skills?.length??0}`, col:C.green},
+      {label:"Role Requires", val:`${result.jd_skills?.length??0}`,   col:C.brand},
+      {label:"Gaps Found",    val:`${result.gaps?.length??0}`,         col:C.red},
+      {label:"Learning Time", val:`${result.total_hours}h`,            col:C.purple},
+    ];
+    const cw4=(TW-12)/4;
+    cards.forEach((cd,i)=>{
+      const cx=ML+i*(cw4+4);
+      rect(cx,y,cw4,50,C.bg,4); border(cx,y,cw4,50,C.border,4);
+      pdf.setDrawColor(...cd.col); pdf.setLineWidth(2.5); pdf.line(cx,y,cx+cw4,y);
+      font(7,"bold",C.muted); pdf.text(cd.label.toUpperCase(),cx+cw4/2,y+15,{align:"center"});
+      font(18,"bold",cd.col); pdf.text(cd.val,cx+cw4/2,y+36,{align:"center"});
+    });
+    y+=60; line(ML,y,W-MR); y+=14;
+
+    // ── GAP ANALYSIS
+    sectionTitle("Skill Gap Analysis");
+    if(!result.gaps?.length){
+      checkY(30); font(10,"bold",C.green);
+      pdf.text("No skill gaps found — strong match for this role!",ML,y+14); y+=30;
+    } else {
+      rect(ML,y,TW,20,[235,242,248],3);
+      font(7,"bold",C.muted);
+      pdf.text("#",ML+6,y+13); pdf.text("Skill",ML+22,y+13);
+      pdf.text("Severity",ML+TW*0.44,y+13); pdf.text("Level",ML+TW*0.60,y+13);
+      pdf.text("Course",ML+TW*0.72,y+13);
+      y+=22;
+      result.gaps.forEach((gap,i)=>{
+        checkY(22);
+        rect(ML,y,TW,20,i%2===0?C.white:C.bg,2);
+        const pct=Math.round(gap.gap_severity*100), sc2=sev(gap.gap_severity), sl=sevLbl(gap.gap_severity);
+        font(7.5,"bold",C.dark); pdf.text(String(i+1).padStart(2,"0"),ML+6,y+13);
+        font(8,"bold",C.dark); pdf.text((gap.skill.length>24?gap.skill.slice(0,22)+"…":gap.skill),ML+22,y+13);
+        const bx=ML+TW*0.44,bw=TW*0.12;
+        rect(bx,y+7,bw,6,C.border,2); rect(bx,y+7,bw*pct/100,6,sc2,2);
+        font(7,"normal",C.muted); pdf.text(`${pct}%`,bx+bw+4,y+13);
+        rect(ML+TW*0.60,y+4,44,13,[...sc2,25],3);
+        font(7,"bold",sc2); pdf.text(sl,ML+TW*0.60+22,y+13,{align:"center"});
+        const ct=(gap.recommended_course?.title||"").slice(0,30);
+        font(7,"normal",C.brand); pdf.text(ct,ML+TW*0.72,y+13);
+        y+=22;
+      });
+    }
+    y+=8; line(ML,y,W-MR); y+=14;
+
+    // ── LEARNING PATHWAY
+    sectionTitle("Personalised Learning Pathway");
+    font(8,"normal",C.muted);
+    pdf.text(`${result.total_hours}h total  ·  ${result.pathway?.length||0} courses  ·  All free`,ML,y);
+    y+=14;
+    (result.pathway||[]).forEach((step,i)=>{
+      checkY(50);
+      pdf.setFillColor(...C.brand); pdf.circle(ML+10,y+12,9,"F");
+      font(8,"bold",C.white); pdf.text(String(step.order),ML+10,y+15,{align:"center"});
+      if(i<(result.pathway?.length||0)-1){ pdf.setDrawColor(...C.brand,60); pdf.setLineWidth(1); pdf.line(ML+10,y+22,ML+10,y+50); }
+      rect(ML+26,y,TW-26,44,C.bg,5); border(ML+26,y,TW-26,44,C.border,5);
+      rect(ML+26,y,3,44,C.brand,0);
+      font(9,"bold",C.dark); pdf.text((step.title.length>55?step.title.slice(0,53)+"…":step.title),ML+36,y+14);
+      font(7.5,"normal",C.muted); pdf.text((step.why||"").slice(0,85),ML+36,y+26,{maxWidth:TW-80});
+      font(7.5,"bold",C.brand); pdf.text(`${step.duration_hours}h`,W-MR-4,y+14,{align:"right"});
+      if(step.url){ const u=step.url.startsWith("/roadmap/")?`roadmap.sh${step.url.replace("/roadmap/","/")}`:step.url; font(6.5,"normal",C.brand); pdf.text(u.slice(0,60),ML+36,y+38); }
+      y+=52;
+    });
+    y+=8; line(ML,y,W-MR); y+=14;
+
+    // ── AI REASONING
+    sectionTitle("AI Reasoning");
+    rect(ML,y,TW,6,C.brand,0); y+=12;
+    font(9,"normal",C.dark);
+    pdf.splitTextToSize(result.reasoning||"",TW).forEach(l=>{ checkY(14); pdf.text(l,ML,y); y+=14; });
+    y+=10; line(ML,y,W-MR); y+=14;
+
+    // ── SKILLS
+    sectionTitle("Your Skills vs Role Requirements");
+    const half=(TW-8)/2;
+    rect(ML,y,half,18,C.green,4); font(8,"bold",C.white); pdf.text(`Your Skills (${result.user_skills?.length||0})`,ML+8,y+12);
+    rect(ML+half+8,y,half,18,C.red,4); font(8,"bold",C.white); pdf.text(`Gaps (${result.gaps?.length||0})`,ML+half+16,y+12);
+    y+=22;
+    const maxRows=Math.max(Math.ceil((result.user_skills?.length||0)/2),result.gaps?.length||0);
+    for(let row=0;row<maxRows;row++){
+      checkY(16);
+      [0,1].forEach(col=>{ const s=(result.user_skills||[])[row*2+col]; if(!s)return; const sx=ML+col*(half/2); rect(sx,y,half/2-4,13,[240,250,244],2); font(7,"normal",[20,80,60]); pdf.text(s.length>14?s.slice(0,12)+"…":s,sx+4,y+9); });
+      const g=(result.gaps||[])[row];
+      if(g){ const sc3=sev(g.gap_severity); rect(ML+half+8,y,half-4,13,[...sc3,20],2); font(7,"bold",sc3); pdf.text(g.skill.length>22?g.skill.slice(0,20)+"…":g.skill,ML+half+12,y+9); }
+      y+=17;
+    }
+
+    // ── FOOTER
+    const total=pdf.internal.getNumberOfPages();
+    for(let p=1;p<=total;p++){
+      pdf.setPage(p);
+      rect(0,H-28,W,28,C.light,0);
+      line(0,H-28,W,C.border,0.5);
+      font(7,"normal",C.muted); pdf.text("AURA — AI-Adaptive Onboarding Engine",ML,H-12);
+      pdf.text(`Page ${p} of ${total}`,W-MR,H-12,{align:"right"});
+      font(7,"normal",[...C.brand]); pdf.text("aura.ai",W/2,H-12,{align:"center"});
+    }
+
+    pdf.save(`AURA_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
   // Derived data
@@ -209,6 +396,20 @@ export default function Dashboard() {
   const moderateCount = gaps.filter(g => g.gap_severity > 0.5 && g.gap_severity <= 0.8).length;
   const minorCount    = gaps.filter(g => g.gap_severity <= 0.5).length;
   const scoreColor    = matchScore > 60 ? "#10b981" : matchScore > 30 ? "#f97316" : "#ef4444";
+  // Recharts can't resolve CSS vars — use hardcoded theme-aware colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Always use high-contrast white tooltip — works in both modes
+  const ttStyle = {
+    background: "#ffffff",
+    border: "1px solid #e2e8f0",
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: 600,
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    color: "#0d1b2a",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+    padding: "8px 14px",
+  };
 
   // ── Accurate pie chart data: Strong vs Critical vs Moderate vs Minor
   const pieData = [
@@ -262,7 +463,7 @@ export default function Dashboard() {
                   <p style={{ margin:0, fontSize:13, color:"var(--text-muted)" }}>Upload resume + paste job description to begin</p>
                 </div>
               </div>
-              <UploadPanel onResult={(r)=>{ setResult(r); setSaved(false); setActiveTab("gaps"); }} onLoading={setLoading}/>
+              <UploadPanel onResult={(r)=>{ setResult(r); setSaved(false); setActiveTab("gaps"); sessionStorage.setItem("aura-last-result", JSON.stringify(r)); }} onLoading={setLoading}/>
             </div>
           </div>
         )}
@@ -297,9 +498,11 @@ export default function Dashboard() {
                 </p>
               </div>
               <div style={{ display:"flex", gap:8 }}>
-                <ActionBtn onClick={()=>{ setResult(null); setSaved(false); }}>↩ New</ActionBtn>
+                <ActionBtn onClick={()=>{ setResult(null); setSaved(false); sessionStorage.removeItem("aura-last-result"); }}>↩ New</ActionBtn>
                 <ActionBtn onClick={handleExportPDF}>⬇ PDF</ActionBtn>
-                <ActionBtn onClick={handleSave} disabled={saved} accent>{saved ? "✓ Saved" : "💾 Save"}</ActionBtn>
+                <ActionBtn onClick={handleSave} disabled={saved||saving} accent>
+                  {saving ? "Saving…" : saved ? "✓ Saved" : "Save"}
+                </ActionBtn>
               </div>
             </div>
 
@@ -338,12 +541,12 @@ export default function Dashboard() {
                         {pieData.map((entry, i) => <Cell key={i} fill={entry.color}/>)}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:10, fontSize:12, fontFamily:"var(--font-body)", color:"var(--text-primary)" }}
+                        contentStyle={ttStyle}
                         formatter={(v, n) => [`${v} skill${v!==1?"s":""}`, n]}
                       />
                       <Legend
                         iconType="circle" iconSize={8}
-                        wrapperStyle={{ fontSize:12, color:"var(--text-muted)", paddingTop:8 }}
+                        wrapperStyle={{ fontSize:12, fontWeight:600, color: isDark ? "#8eaac8" : "#5a7184", paddingTop:8, fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -366,16 +569,16 @@ export default function Dashboard() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
                       <XAxis
                         dataKey="name"
-                        tick={{ fontSize:10, fill:"var(--text-muted)", fontFamily:"var(--font-body)" }}
+                        tick={{ fontSize:10, fill: isDark ? "#8eaac8" : "#5a7184", fontFamily:"'Plus Jakarta Sans',sans-serif" }}
                         axisLine={false} tickLine={false} angle={-30} textAnchor="end" interval={0}
                       />
                       <YAxis
-                        tick={{ fontSize:10, fill:"var(--text-muted)" }}
+                        tick={{ fontSize:10, fill: isDark ? "#8eaac8" : "#5a7184" }}
                         axisLine={false} tickLine={false}
                         domain={[0,100]} tickFormatter={v=>`${v}%`}
                       />
                       <Tooltip
-                        contentStyle={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:10, fontSize:12, fontFamily:"var(--font-body)", color:"var(--text-primary)" }}
+                        contentStyle={ttStyle}
                         formatter={(v) => [`${v}%`, "Severity"]}
                         cursor={{ fill:"var(--input-bg)" }}
                       />
@@ -502,7 +705,7 @@ export default function Dashboard() {
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                             <div style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)" }}>{step.title}</div>
                             {step.url && (
-                              <a href={step.url} target="_blank" rel="noreferrer" style={{ background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, color:"#059669", textDecoration:"none", flexShrink:0, marginLeft:8 }}>Free ↗</a>
+                              <SmartLink url={step.url}/>
                             )}
                           </div>
                           <div style={{ fontSize:13, color:"var(--text-muted)", lineHeight:1.6 }}>{step.why}</div>
