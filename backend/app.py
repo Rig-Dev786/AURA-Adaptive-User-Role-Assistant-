@@ -20,18 +20,18 @@ CORS(app)
 cred = credentials.Certificate(os.getenv("FIREBASE_SERVICE_ACCOUNT"))
 firebase_admin.initialize_app(cred)
 
-# Load catalog once at startup
 with open("catalog.json") as f:
     CATALOG = json.load(f)
+
 
 def get_uid(req):
     token = req.headers.get("Authorization", "").replace("Bearer ", "").strip()
     if not token:
         return None
     try:
-        decoded = fb_auth.verify_id_token(token)
-        return decoded["uid"]
-    except Exception:
+        return fb_auth.verify_id_token(token)["uid"]
+    except Exception as e:
+        print(f"[auth] Token error: {e}")
         return None
 
 
@@ -50,25 +50,16 @@ def analyze():
     if not jd_text:
         return jsonify({"error": "No job description provided"}), 400
 
-    # Debug log
-    print(f"[analyze] JD text length: {len(jd_text)}")
-    print(f"[analyze] JD preview: {jd_text[:200]}")
+    print(f"[analyze] JD length={len(jd_text)}, preview={jd_text[:120]}")
 
     resume_text = extract_text(resume_file)
-    print(f"[analyze] Resume text length: {len(resume_text)}")
-
     user_skills = extract_skills(resume_text)
     jd_skills   = extract_skills(jd_text)
 
-    print(f"[analyze] User skills ({len(user_skills)}): {user_skills}")
-    print(f"[analyze] JD skills ({len(jd_skills)}): {jd_skills}")
+    print(f"[analyze] user_skills={len(user_skills)}, jd_skills={len(jd_skills)}")
 
-    # If JD extraction returns 0 skills, try broader extraction
-    if len(jd_skills) == 0:
-        print("[analyze] WARNING: 0 JD skills extracted — check JD text format")
-        return jsonify({
-            "error": f"Could not extract any skills from the job description. Make sure it contains specific skill names like 'Python', 'Docker', 'SQL' etc. JD received: {jd_text[:300]}"
-        }), 400
+    if not jd_skills:
+        return jsonify({"error": "Could not extract skills from the job description. Make sure it contains specific skill names."}), 400
 
     gaps, match_score = score_gaps(user_skills, jd_skills, CATALOG)
     result = generate_pathway(gaps, CATALOG)
@@ -87,14 +78,10 @@ def analyze():
         "reasoning":    result["reasoning"],
         "match_score":  match_score,
         "total_hours":  result["total_hours"],
+        "timestamp":    int(time.time()),
     }
 
-    if uid:
-        try:
-            save_analysis(uid, analysis_id, response)
-        except Exception as e:
-            print(f"[analyze] Firestore save failed: {e}")
-
+    # Do NOT auto-save — only save when user clicks Save button
     return jsonify(response)
 
 
@@ -102,10 +89,26 @@ def analyze():
 def save():
     uid = get_uid(request)
     if not uid:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized — please sign in to save"}), 401
+
     data = request.get_json()
-    save_analysis(uid, data["analysis_id"], data)
-    return jsonify({"saved": True})
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    analysis_id = data.get("analysis_id")
+    result      = data.get("result")  # full result object sent from frontend
+
+    if not analysis_id or not result:
+        return jsonify({"error": "Missing analysis_id or result"}), 400
+
+    print(f"[save] Saving {analysis_id} for uid={uid}")
+
+    try:
+        save_analysis(uid, analysis_id, result)
+        return jsonify({"saved": True, "analysis_id": analysis_id})
+    except Exception as e:
+        print(f"[save] Firestore error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/history", methods=["GET"])

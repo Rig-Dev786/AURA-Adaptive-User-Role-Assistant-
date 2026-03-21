@@ -20,6 +20,34 @@ const SEV = (s) => s > 0.8
   ? { color:"#f97316", bg:"rgba(249,115,22,0.08)", label:"Moderate" }
   : { color:"#eab308", bg:"rgba(234,179,8,0.08)",  label:"Minor" };
 
+
+// SmartLink — internal /roadmap/ routes use navigate, external use <a>
+function SmartLink({ url, label="View Roadmap →" }) {
+  const navigate = useNavigate();
+  const isInternal = url && url.startsWith("/roadmap/");
+  if (!url) return null;
+  if (isInternal) {
+    return (
+      <button onClick={() => navigate(url)} style={{
+        flexShrink:0, background:"var(--brand-light)", border:"1px solid var(--brand-border)",
+        borderRadius:20, padding:"4px 12px", fontSize:11, fontWeight:700,
+        color:"var(--brand)", cursor:"pointer", fontFamily:"var(--font-body)",
+        whiteSpace:"nowrap", transition:"all 0.15s",
+      }}
+        onMouseEnter={e=>{e.currentTarget.style.background="var(--brand)";e.currentTarget.style.color="#fff";}}
+        onMouseLeave={e=>{e.currentTarget.style.background="var(--brand-light)";e.currentTarget.style.color="var(--brand)";}}
+      >{label}</button>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" style={{
+      flexShrink:0, background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.3)",
+      borderRadius:20, padding:"4px 12px", fontSize:11, fontWeight:700,
+      color:"#34d399", textDecoration:"none", whiteSpace:"nowrap",
+    }}>↗ Open</a>
+  );
+}
+
 // ── Metric card
 function MetricCard({ label, value, sub, accent="#0891b2", delay=0 }) {
   return (
@@ -93,13 +121,7 @@ function GapRow({ gap, index }) {
         <span style={{ fontSize:12, color:"var(--text-muted)", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
           {gap.recommended_course?.title}
         </span>
-        {gap.recommended_course?.url && (
-          <a href={gap.recommended_course.url} target="_blank" rel="noreferrer" style={{
-            flexShrink:0, background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)",
-            borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, color:"#059669",
-            textDecoration:"none", whiteSpace:"nowrap",
-          }}>Free ↗</a>
-        )}
+        {gap.recommended_course?.url && <SmartLink url={gap.recommended_course.url}/>}
       </div>
     </div>
   );
@@ -133,13 +155,7 @@ function PathwayStep({ step, total, index }) {
           </div>
           <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:12 }}>
             <span style={{ background:"var(--brand-light)", border:"1px solid var(--brand-border)", borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600, color:"var(--brand)" }}>⏱ {step.duration_hours}h</span>
-            {step.url && (
-              <a href={step.url} target="_blank" rel="noreferrer" style={{
-                background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)",
-                borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600,
-                color:"#059669", textDecoration:"none",
-              }}>Free ↗</a>
-            )}
+            {step.url && <SmartLink url={step.url}/>}
           </div>
         </div>
         <div style={{ marginTop:10, height:3, background:"var(--border)", borderRadius:2 }}>
@@ -170,77 +186,363 @@ export default function Dashboard() {
   const [result, setResult]     = useState(null);
   const [loading, setLoading]   = useState(false);
   const [saved, setSaved]       = useState(false);
+  const [saving, setSaving]     = useState(false);
   const [activeTab, setActiveTab] = useState("gaps");
   const resultRef = useRef();
   const navigate  = useNavigate();
 
   useEffect(() => {
+    // Restore last result from sessionStorage when navigating back from roadmap
+    const saved = sessionStorage.getItem("aura-last-result");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setResult(parsed);
+        setSaved(false);
+      } catch(e) {}
+    }
     return onAuthStateChanged(auth, (u) => { if (!u) navigate("/"); else setUser(u); });
   }, []);
 
   const handleSave = async () => {
-    if (!result) return;
+    if (!result || saved) return;
+    setSaving(true);
     try {
-      const token = await auth.currentUser.getIdToken();
-      await axios.post(`${BACKEND}/save`, { analysis_id: result.analysis_id }, { headers:{ Authorization:`Bearer ${token}` } });
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        alert("Please sign in to save analyses.");
+        setSaving(false);
+        return;
+      }
+      // Send the FULL result so backend can store it
+      await axios.post(
+        `${BACKEND}/save`,
+        { analysis_id: result.analysis_id, result },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setSaved(true);
-    } catch(e) { console.error(e); }
+    } catch(e) {
+      console.error("Save failed:", e);
+      alert("Save failed — check console for details.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleExportPDF = async () => {
-    if (!resultRef.current) return;
-    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
-    const bgColor    = isDarkMode ? '#0a0f1e' : '#f0f4f8';
+  const handleExportPDF = () => {
+    if (!result) return;
 
-    // Temporarily force light background for clean PDF capture
-    const el = resultRef.current;
-    const prevBg = el.style.background;
-    if (isDarkMode) el.style.background = '#0a0f1e';
+    const pdf = new jsPDF({ orientation:"portrait", unit:"pt", format:"a4" });
+    const W=595, H=842, ML=44, MR=44, MT=52;
+    const TW = W - ML - MR;
+    let y = MT;
 
-    try {
-      const canvas = await html2canvas(el, {
-        backgroundColor: bgColor,
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        windowWidth: 1200,
-        scrollX: 0, scrollY: 0,
-        onclone: (doc) => {
-          // copy CSS vars into cloned doc so styles resolve
-          const root = doc.documentElement;
-          const vars = ['--bg-main','--bg-card','--border','--text-primary','--text-muted','--brand','--brand-light','--brand-border','--input-bg'];
-          vars.forEach(v => {
-            root.style.setProperty(v, getComputedStyle(document.documentElement).getPropertyValue(v));
-          });
-        }
+    // ── Colors ──
+    const C = {
+      brand:  [8, 145, 178],
+      brand2: [6, 182, 212],
+      dark:   [13, 27, 42],
+      muted:  [90, 113, 132],
+      light:  [240, 244, 248],
+      white:  [255, 255, 255],
+      red:    [239, 68, 68],
+      orange: [249, 115, 22],
+      yellow: [234, 179, 8],
+      green:  [16, 185, 129],
+      purple: [139, 92, 246],
+      bg:     [247, 250, 253],
+      border: [226, 232, 240],
+    };
+
+    const sev = (s) => s > 0.8 ? C.red : s > 0.5 ? C.orange : C.yellow;
+    const sevLabel = (s) => s > 0.8 ? "Critical" : s > 0.5 ? "Moderate" : "Minor";
+
+    const newPage = () => { pdf.addPage(); y = MT; };
+    const checkY  = (n=30) => { if (y + n > H - 48) newPage(); };
+
+    const font = (size, weight="normal", color=C.dark) => {
+      pdf.setFontSize(size);
+      pdf.setFont("helvetica", weight);
+      pdf.setTextColor(...color);
+    };
+
+    const rect = (x, ry, w, h, fill, r=3) => {
+      pdf.setFillColor(...fill);
+      if (r) pdf.roundedRect(x, ry, w, h, r, r, "F");
+      else   pdf.rect(x, ry, w, h, "F");
+    };
+
+    const border = (x, ry, w, h, stroke, r=3, lw=0.5) => {
+      pdf.setDrawColor(...stroke);
+      pdf.setLineWidth(lw);
+      if (r) pdf.roundedRect(x, ry, w, h, r, r, "S");
+      else   pdf.rect(x, ry, w, h, "S");
+    };
+
+    const line = (x1, ly, x2, col=C.border, lw=0.5) => {
+      pdf.setDrawColor(...col);
+      pdf.setLineWidth(lw);
+      pdf.line(x1, ly, x2, ly);
+    };
+
+    const chip = (x, cy, label, fill, textCol) => {
+      const tw = pdf.getTextWidth(label);
+      const cw = tw + 12, ch = 14;
+      rect(x, cy, cw, ch, fill, 3);
+      font(7, "bold", textCol);
+      pdf.text(label, x + 6, cy + 10);
+      return cw;
+    };
+
+    const sectionTitle = (title) => {
+      checkY(36);
+      // Left accent bar
+      rect(ML, y, 3, 18, C.brand, 1);
+      font(12, "bold", C.dark);
+      pdf.text(title, ML + 10, y + 13);
+      y += 24;
+    };
+
+    // ══════════════════════════════════════════════
+    // PAGE 1
+    // ══════════════════════════════════════════════
+
+    // Header band
+    rect(0, 0, W, 78, C.brand, 0);
+    rect(0, 0, W, 78, [6,182,212,30], 0); // subtle overlay
+
+    // AURA logo text
+    font(20, "bold", C.white);
+    pdf.text("AURA", ML, 28);
+    font(9, "normal", [180,225,240]);
+    pdf.text("AI-Adaptive Onboarding Engine", ML, 42);
+
+    // Date + score on right
+    const scoreCol = result.match_score > 60 ? C.green : result.match_score > 30 ? C.orange : C.red;
+    rect(W - MR - 80, 10, 80, 56, [255,255,255,20], 6);
+    font(28, "bold", C.white);
+    pdf.text(`${result.match_score}%`, W - MR - 40, 40, { align:"center" });
+    font(7.5, "normal", [200,230,240]);
+    pdf.text("MATCH SCORE", W - MR - 40, 54, { align:"center" });
+
+    font(8, "normal", [180,220,235]);
+    pdf.text(`Generated ${new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}`, ML, 58);
+    y = 96;
+
+    // ── Metric cards row ──
+    const cards = [
+      { label:"Your Skills",   val:`${result.user_skills?.length ?? 0}`, col:C.green  },
+      { label:"Role Requires", val:`${result.jd_skills?.length ?? 0}`,   col:C.brand  },
+      { label:"Gaps Found",    val:`${result.gaps?.length ?? 0}`,         col:C.red    },
+      { label:"Learning Time", val:`${result.total_hours}h`,              col:C.purple },
+    ];
+    const cw4 = (TW - 12) / 4;
+    cards.forEach((c,i) => {
+      const cx = ML + i*(cw4+4);
+      rect(cx, y, cw4, 52, C.bg, 4);
+      border(cx, y, cw4, 52, C.border, 4);
+      // top accent
+      pdf.setDrawColor(...c.col);
+      pdf.setLineWidth(2.5);
+      pdf.line(cx, y, cx+cw4, y);
+      font(7, "bold", C.muted);
+      pdf.text(c.label.toUpperCase(), cx+cw4/2, y+16, { align:"center" });
+      font(20, "bold", c.col);
+      pdf.text(c.val, cx+cw4/2, y+38, { align:"center" });
+    });
+    y += 62;
+
+    line(ML, y, W-MR, C.border, 0.5);
+    y += 16;
+
+    // ── Gap Analysis ──
+    sectionTitle("Skill Gap Analysis");
+
+    if (!result.gaps?.length) {
+      rect(ML, y, TW, 36, [240,253,244], 6);
+      border(ML, y, TW, 36, C.green, 6);
+      font(10, "bold", C.green);
+      pdf.text("No skill gaps found — strong match for this role!", ML + TW/2, y+22, { align:"center" });
+      y += 44;
+    } else {
+      // Table header
+      rect(ML, y, TW, 20, [235,242,248], 3);
+      font(7, "bold", C.muted);
+      pdf.text("#",          ML+6,        y+13);
+      pdf.text("Skill",      ML+22,       y+13);
+      pdf.text("Severity",   ML+TW*0.44,  y+13);
+      pdf.text("Level",      ML+TW*0.60,  y+13);
+      pdf.text("Course",     ML+TW*0.72,  y+13);
+      y += 22;
+
+      result.gaps.forEach((gap, i) => {
+        checkY(22);
+        rect(ML, y, TW, 20, i%2===0 ? C.white : C.bg, 2);
+
+        const pct = Math.round(gap.gap_severity * 100);
+        const sc  = sev(gap.gap_severity);
+        const sl  = sevLabel(gap.gap_severity);
+
+        font(7.5, "bold", C.dark);
+        pdf.text(String(i+1).padStart(2,"0"), ML+6, y+13);
+
+        font(8, "bold", C.dark);
+        const sk = gap.skill.length > 24 ? gap.skill.slice(0,22)+"…" : gap.skill;
+        pdf.text(sk, ML+22, y+13);
+
+        // Severity bar
+        const bx = ML+TW*0.44, bw = TW*0.12;
+        rect(bx, y+7, bw, 6, C.border, 2);
+        rect(bx, y+7, bw*pct/100, 6, sc, 2);
+        font(7, "normal", C.muted);
+        pdf.text(`${pct}%`, bx+bw+4, y+13);
+
+        // Level chip
+        rect(ML+TW*0.60, y+4, 44, 13, [...sc, 25], 3);
+        font(7, "bold", sc);
+        pdf.text(sl, ML+TW*0.60+22, y+13, { align:"center" });
+
+        // Course name
+        const ct = (gap.recommended_course?.title||"").slice(0,30);
+        font(7, "normal", C.brand);
+        pdf.text(ct, ML+TW*0.72, y+13);
+
+        y += 22;
       });
+    }
 
-      const A4_W = 595, A4_H = 842;
-      const pdf  = new jsPDF({ orientation:"portrait", unit:"pt", format:"a4" });
+    y += 8; line(ML, y, W-MR); y += 16;
 
-      const imgW  = canvas.width;
-      const imgH  = canvas.height;
-      const ratio = A4_W / imgW;
-      const scaledH = imgH * ratio;
+    // ── Learning Pathway ──
+    checkY(50);
+    sectionTitle("Personalised Learning Pathway");
 
-      const pageCount = Math.ceil(scaledH / A4_H);
-      const imgData   = canvas.toDataURL("image/jpeg", 0.92);
+    font(8, "normal", C.muted);
+    pdf.text(`${result.total_hours}h total  ·  ${result.pathway?.length||0} courses  ·  All free`, ML, y);
+    y += 16;
 
-      for (let page = 0; page < pageCount; page++) {
-        if (page > 0) pdf.addPage();
-        const yOffset = -page * A4_H;
-        pdf.addImage(imgData, "JPEG", 0, yOffset, A4_W, scaledH);
+    (result.pathway||[]).forEach((step, i) => {
+      checkY(50);
 
-        // Add page number
-        pdf.setFontSize(9);
-        pdf.setTextColor(150);
-        pdf.text(`AURA Analysis · Page ${page+1} of ${pageCount}`, A4_W/2, A4_H - 12, { align:"center" });
+      // Circle
+      pdf.setFillColor(...C.brand);
+      pdf.circle(ML+10, y+12, 9, "F");
+      font(8, "bold", C.white);
+      pdf.text(String(step.order), ML+10, y+15, { align:"center" });
+
+      // Connector line
+      if (i < (result.pathway?.length||0)-1) {
+        pdf.setDrawColor(...C.brand, 60);
+        pdf.setLineWidth(1);
+        pdf.line(ML+10, y+22, ML+10, y+50);
       }
 
-      pdf.save(`AURA_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
-    } finally {
-      el.style.background = prevBg;
+      // Card
+      rect(ML+26, y, TW-26, 44, C.bg, 5);
+      border(ML+26, y, TW-26, 44, C.border, 5);
+
+      // Left accent
+      rect(ML+26, y, 3, 44, C.brand, 0);
+
+      font(9, "bold", C.dark);
+      const titleText = step.title.length > 55 ? step.title.slice(0,53)+"…" : step.title;
+      pdf.text(titleText, ML+36, y+14);
+
+      font(7.5, "normal", C.muted);
+      const whyText = (step.why||"").slice(0,85);
+      pdf.text(whyText, ML+36, y+26, { maxWidth: TW-80 });
+
+      // Hours badge + URL
+      font(7.5, "bold", C.brand);
+      pdf.text(`${step.duration_hours}h`, W-MR-4, y+14, { align:"right" });
+
+      if (step.url) {
+        const urlDisplay = step.url.startsWith("/roadmap/")
+          ? `roadmap.sh${step.url.replace("/roadmap/","/")}` : step.url;
+        font(6.5, "normal", C.brand);
+        pdf.text(urlDisplay.slice(0,60), ML+36, y+38);
+      }
+
+      y += 52;
+    });
+
+    y += 8; line(ML, y, W-MR); y += 16;
+
+    // ── AI Reasoning ──
+    checkY(60);
+    sectionTitle("AI Reasoning");
+
+    rect(ML, y, TW, 8, C.brand, 0);
+    y += 14;
+
+    font(9, "normal", C.dark);
+    const rLines = pdf.splitTextToSize(result.reasoning||"", TW);
+    rLines.forEach(l => { checkY(14); pdf.text(l, ML, y); y += 14; });
+
+    y += 12; line(ML, y, W-MR); y += 16;
+
+    // ── Skills ──
+    checkY(40);
+    sectionTitle("Your Skills vs Role Requirements");
+
+    const half = (TW - 8) / 2;
+
+    // Your skills header
+    rect(ML, y, half, 18, C.green, 4);
+    font(8, "bold", C.white);
+    pdf.text(`Your Skills  (${result.user_skills?.length||0})`, ML+8, y+12);
+
+    // Gaps header
+    rect(ML+half+8, y, half, 18, C.red, 4);
+    font(8, "bold", C.white);
+    pdf.text(`Gaps  (${result.gaps?.length||0})`, ML+half+16, y+12);
+    y += 22;
+
+    const maxRows = Math.max(
+      Math.ceil((result.user_skills?.length||0)/2),
+      result.gaps?.length||0
+    );
+
+    for (let row = 0; row < maxRows; row++) {
+      checkY(16);
+
+      // Your skills — 2 per row
+      [0,1].forEach(col => {
+        const idx = row*2+col;
+        const s = (result.user_skills||[])[idx];
+        if (!s) return;
+        const sx = ML + col*(half/2);
+        rect(sx, y, half/2-4, 13, [240,250,244], 2);
+        font(7, "normal", [20,80,60]);
+        pdf.text(s.length>14?s.slice(0,12)+"…":s, sx+4, y+9);
+      });
+
+      // Gap
+      const g = (result.gaps||[])[row];
+      if (g) {
+        const sc = sev(g.gap_severity);
+        rect(ML+half+8, y, half-4, 13, [...sc, 20], 2);
+        font(7, "bold", sc);
+        pdf.text(g.skill.length>22?g.skill.slice(0,20)+"…":g.skill, ML+half+12, y+9);
+      }
+
+      y += 17;
     }
+
+    // ── Footer on all pages ──
+    const total = pdf.internal.getNumberOfPages();
+    for (let p = 1; p <= total; p++) {
+      pdf.setPage(p);
+      rect(0, H-28, W, 28, C.light, 0);
+      line(0, H-28, W, C.border, 0.5);
+      font(7, "normal", C.muted);
+      pdf.text("AURA — AI-Adaptive Onboarding Engine", ML, H-12);
+      pdf.text(`Page ${p} of ${total}`, W-MR, H-12, { align:"right" });
+      font(7, "normal", [...C.brand]);
+      pdf.text("aura.ai", W/2, H-12, { align:"center" });
+    }
+
+    pdf.save(`AURA_Analysis_${new Date().toISOString().slice(0,10)}.pdf`);
   };
 
   // Derived data
@@ -322,7 +624,7 @@ export default function Dashboard() {
                   <p style={{ margin:0, fontSize:13, color:"var(--text-muted)" }}>Upload resume + paste job description to begin</p>
                 </div>
               </div>
-              <UploadPanel onResult={(r)=>{ setResult(r); setSaved(false); setActiveTab("gaps"); }} onLoading={setLoading}/>
+              <UploadPanel onResult={(r)=>{ setResult(r); setSaved(false); setActiveTab("gaps"); sessionStorage.setItem("aura-last-result", JSON.stringify(r)); }} onLoading={setLoading}/>
             </div>
           </div>
         )}
@@ -357,9 +659,11 @@ export default function Dashboard() {
                 </p>
               </div>
               <div style={{ display:"flex", gap:8 }}>
-                <ActionBtn onClick={()=>{ setResult(null); setSaved(false); }}>↩ New</ActionBtn>
+                <ActionBtn onClick={()=>{ setResult(null); setSaved(false); sessionStorage.removeItem("aura-last-result"); }}>↩ New</ActionBtn>
                 <ActionBtn onClick={handleExportPDF}>⬇ PDF</ActionBtn>
-                <ActionBtn onClick={handleSave} disabled={saved} accent>{saved ? "✓ Saved" : "💾 Save"}</ActionBtn>
+                <ActionBtn onClick={handleSave} disabled={saved||saving} accent>
+                  {saving ? "Saving…" : saved ? "✓ Saved" : "Save"}
+                </ActionBtn>
               </div>
             </div>
 
@@ -562,7 +866,7 @@ export default function Dashboard() {
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                             <div style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)" }}>{step.title}</div>
                             {step.url && (
-                              <a href={step.url} target="_blank" rel="noreferrer" style={{ background:"rgba(16,185,129,0.08)", border:"1px solid rgba(16,185,129,0.25)", borderRadius:20, padding:"2px 10px", fontSize:11, fontWeight:600, color:"#059669", textDecoration:"none", flexShrink:0, marginLeft:8 }}>Free ↗</a>
+                              <SmartLink url={step.url}/>
                             )}
                           </div>
                           <div style={{ fontSize:13, color:"var(--text-muted)", lineHeight:1.6 }}>{step.why}</div>
