@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
 import { auth } from "../firebase";
 
@@ -57,7 +57,7 @@ export default function UploadPanel({ onResult, onLoading }) {
       {/* Resume Upload */}
       <div>
         <label style={{
-          color: "rgba(15,23,42,0.6)", fontSize: 12, fontWeight: 600,
+          color: "var(--text-muted)", fontSize: 12, fontWeight: 600,
           letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 10
         }}>
           Resume (PDF or DOCX)
@@ -67,35 +67,38 @@ export default function UploadPanel({ onResult, onLoading }) {
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-          className={`glass-panel ${dragging ? "animate-pulse-glow" : "hover-scale"}`}
           style={{
-            border: `2px dashed ${dragging ? "var(--primary)" : file ? "var(--accent)" : "var(--glass-border)"}`,
-            borderRadius: "var(--radius-md)",
+            border: `2px dashed ${dragging ? "var(--brand)" : file ? "var(--success)" : "var(--border)"}`,
+            borderRadius: 14,
             padding: "40px 24px",
             textAlign: "center",
             cursor: "pointer",
-            background: dragging ? "rgba(3,105,161,0.07)" : file ? "rgba(2,132,199,0.07)" : "var(--glass-bg)",
+            background: dragging ? "var(--brand-light)" : file ? "rgba(16,185,129,0.06)" : "var(--input-bg)",
             minHeight: 160,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 12,
-            boxShadow: dragging ? "0 0 40px var(--primary-glow)" : "none",
-          }}>
+            boxShadow: dragging ? "0 0 40px rgba(8,145,178,0.15)" : "none",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={e => { if(!dragging && !file) e.currentTarget.style.borderColor = "var(--brand-border)"; }}
+          onMouseLeave={e => { if(!dragging && !file) e.currentTarget.style.borderColor = "var(--border)"; }}
+        >
           <div style={{ 
             fontSize: 36, 
-            transform: dragging ? "scale(1.2) translateY(-10px)" : file ? "scale(1)" : "scale(1)", 
+            transform: dragging ? "scale(1.2) translateY(-10px)" : "scale(1)", 
             transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
           }}>{file ? "📄" : "⬆️"}</div>
           {file ? (
             <>
-              <p style={{ color: "#67e8f9", fontWeight: 600, margin: 0 }}>{file.name}</p>
-              <p style={{ color: "rgba(15,23,42,0.3)", fontSize: 12, margin: 0 }}>Click to change</p>
+              <p style={{ color: "var(--brand)", fontWeight: 600, margin: 0 }}>{file.name}</p>
+              <p style={{ color: "var(--text-muted)", fontSize: 12, margin: 0 }}>Click to change</p>
             </>
           ) : (
             <>
-              <p style={{ color: "rgba(15,23,42,0.5)", margin: 0, fontSize: 14 }}>
+              <p style={{ color: "var(--text-muted)", margin: 0, fontSize: 14 }}>
                 Drop your resume here
               </p>
-              <p style={{ color: "rgba(15,23,42,0.25)", fontSize: 12, margin: 0 }}>
+              <p style={{ color: "var(--text-muted)", fontSize: 12, margin: 0, opacity: 0.6 }}>
                 PDF or DOCX supported
               </p>
             </>
@@ -109,17 +112,23 @@ export default function UploadPanel({ onResult, onLoading }) {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <label style={{
-            color: "rgba(15,23,42,0.6)", fontSize: 12, fontWeight: 600,
+            color: "var(--text-muted)", fontSize: 12, fontWeight: 600,
             letterSpacing: "0.08em", textTransform: "uppercase"
           }}>
             Job Description
           </label>
           <div style={{ display: "flex", gap: 6 }}>
             {Object.entries(DEMO_PROFILES).map(([key, p]) => (
-              <button className="btn-secondary" key={key} onClick={() => loadDemo(key)} style={{
-                color: "var(--text-main)", fontSize: 11, padding: "3px 10px",
-                borderRadius: "var(--radius-sm)",
-              }}>{p.label}</button>
+              <button key={key} onClick={() => loadDemo(key)} style={{
+                color: "var(--brand)", fontSize: 11, padding: "3px 10px",
+                borderRadius: 8, background: "var(--brand-light)",
+                border: "1px solid var(--brand-border)", cursor: "pointer",
+                fontWeight: 600, fontFamily: "'Sora', sans-serif",
+                transition: "all 0.2s",
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(8,145,178,0.15)"}
+                onMouseLeave={e => e.currentTarget.style.background = "var(--brand-light)"}
+              >{p.label}</button>
             ))}
           </div>
         </div>
@@ -127,26 +136,37 @@ export default function UploadPanel({ onResult, onLoading }) {
           value={jdText}
           onChange={(e) => setJdText(e.target.value)}
           placeholder="Paste the job description here, or click a demo profile above..."
-          className="glass-panel"
           style={{
             width: "100%", height: 180, padding: 16,
-            borderRadius: "var(--radius-md)", color: "var(--text-main)", fontSize: 13,
+            borderRadius: 14, color: "var(--text-primary)", fontSize: 13,
             lineHeight: 1.6, resize: "none", outline: "none",
             boxSizing: "border-box",
+            background: "var(--input-bg)",
+            border: "1px solid var(--border)",
+            fontFamily: "'Sora', sans-serif",
+            transition: "border-color 0.2s",
           }}
-          onFocus={(e) => e.target.style.borderColor = "var(--primary-glow)"}
-          onBlur={(e) => e.target.style.borderColor = "var(--glass-border)"}
+          onFocus={(e) => e.target.style.borderColor = "var(--brand)"}
+          onBlur={(e) => e.target.style.borderColor = "var(--border)"}
         />
       </div>
 
       {/* Submit */}
       <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center" }}>
-        <button className="btn-primary" onClick={handleSubmit} disabled={!file || !jdText.trim()} style={{
+        <button onClick={handleSubmit} disabled={!file || !jdText.trim()} style={{
           padding: "16px 48px",
-          borderRadius: "var(--radius-md)", fontSize: 16,
+          borderRadius: 12, fontSize: 16,
           opacity: (!file || !jdText.trim()) ? 0.3 : 1,
           cursor: (!file || !jdText.trim()) ? "not-allowed" : "pointer",
-        }}>
+          background: "linear-gradient(135deg,#0891b2,#06b6d4)",
+          border: "none", color: "#fff", fontWeight: 700,
+          fontFamily: "'Sora', sans-serif",
+          boxShadow: "0 4px 16px rgba(8,145,178,0.3)",
+          transition: "all 0.25s ease",
+        }}
+          onMouseEnter={e => { if(file && jdText.trim()) e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+        >
           ✦ Analyze My Profile
         </button>
       </div>
