@@ -1,21 +1,16 @@
-# 🗺️ Developer Roadmaps Data
+🗺️ Developer Roadmaps Data
+This repository contains a collection of developer roadmaps, automatically scraped and downloaded from the official roadmap.sh GitHub repository.
 
-This repository contains a collection of developer roadmaps, automatically scraped and downloaded from the official [roadmap.sh](https://roadmap.sh/) GitHub repository. 
+📂 What's Inside?
+All_Roadmap_Files/: This folder contains 70+ individual Markdown (.md) files. Each file represents a specific tech domain (e.g., Python, Backend, DevOps, Machine Learning) and includes the raw data and guide text for that roadmap.
+scraper.py: The Python script used to automatically fetch and update these files via the GitHub API.
+🚀 How to Update the Data
+If new roadmaps are added to roadmap.sh, you can easily update this repository by running the included Python script.
 
-## 📂 What's Inside?
-* `All_Roadmap_Files/`: This folder contains 70+ individual Markdown (`.md`) files. Each file represents a specific tech domain (e.g., Python, Backend, DevOps, Machine Learning) and includes the raw data and guide text for that roadmap.
-* `scraper.py`: The Python script used to automatically fetch and update these files via the GitHub API.
-
-## 🚀 How to Update the Data
-If new roadmaps are added to roadmap.sh, you can easily update this repository by running the included Python script. 
-
-1. Ensure you have Python installed.
-2. Install the required `requests` library:
-   ```bash
-   pip install requests
-3. Run the scraper:
-
-```bash
+Ensure you have Python installed.
+Install the required requests library:
+pip install requests
+Run the scraper:
     python3 scraper.py
 
 
